@@ -13,8 +13,13 @@ export default function AppointmentSelector({
   onCancel,                           // (appointmentId) => void
   onReschedule,                       // (appointmentId, date, time) => void
 }) {
+
+  const today = new Date();
+
+
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
+
 
   // helpers
   const isPast = (dateStr) => dateStr < new Date().toISOString().split('T')[0];
@@ -40,7 +45,7 @@ export default function AppointmentSelector({
     return map;
   }, [scopedAppointments]);
 
-  // Mark calendar days: full (red), limited (orange), selected available (green)
+  // Mark calendar days: full (red), limited (orange)
   const markedDates = useMemo(() => {
     const marks = {};
     Object.keys(bookedByDate).forEach(date => {
@@ -58,8 +63,19 @@ export default function AppointmentSelector({
       }
     });
 
-    if (selectedDate && !marks[selectedDate]) {
-      marks[selectedDate] = { selected: true, selectedColor: '#ccffcc' };
+    if (selectedDate) {
+  // If already has a mark (like orange background), keep it but add a border
+    marks[selectedDate] = {
+      ...(marks[selectedDate] || {}),
+      selected: true,
+      customStyles: {
+        container: {
+          borderWidth: 2,
+          borderColor: '#4e99e9ff', // bright blue border
+          borderRadius: 18, // make sure it stays circular
+          },
+      },
+    };
     }
     return marks;
   }, [bookedByDate, selectedDate, timeSlots, mode]);
@@ -225,6 +241,7 @@ export default function AppointmentSelector({
       <Calendar
         onDayPress={handleDayPress}
         markedDates={markedDates}
+        markingType="custom"
         {...(mode === 'book' ? { minDate: new Date().toISOString().split('T')[0] } : {})}
       />
 

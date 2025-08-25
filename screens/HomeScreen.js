@@ -3,23 +3,26 @@ import { View, Text, StyleSheet, Alert, FlatList } from 'react-native';
 import user_placeholder from '../assets/user_placeholder.png';
 import Barber from '../components/barber';
 import Barbers from '../data/Barbers'; 
-import Footer from '../components/footerNavigation';
+import AppLayout from '../components/appLayout';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import AppointmentSelector from '../components/appointmentSelector';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 
 export default function HomeScreen() {
   
   const navigation = useNavigation();
+  const { params } = useRoute();
+  const user = params?.user;
+  const userId = user?.id; 
+  const firstName = user?.name? user.name.match(/^\S+/)[0] : '';
 
   return (
+    <AppLayout>
     <SafeAreaView style = {styles.safeArea}>
       <View style = {styles.header}>
-        <Text style={styles.title}>Welcome to the Barbershop</Text>
+        <Text style={styles.title}>{user? 'Welcome ' + firstName : 'Welcome to the Barber Shop'} </Text>
       </View>
       <FlatList
-        contentContainerStyle={{ paddingBottom: 35 }}
         key={2}
         numColumns={2}
         columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: 20 }}
@@ -35,12 +38,8 @@ export default function HomeScreen() {
           />
         )}
       />
-      <Footer 
-      onPressAppointments={() => Alert.alert('Appointments pressed')}
-      onPressHome={() => Alert.alert('Home pressed')}
-      onPressProfile={() => Alert.alert('Profile pressed')}
-      />
     </SafeAreaView>
+    </AppLayout>
   );
 }
 

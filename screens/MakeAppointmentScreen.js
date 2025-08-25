@@ -1,13 +1,13 @@
 // screens/MakeAppointmentScreen.js
 import React, { useMemo, useState } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import AppointmentSelector from '../components/appointmentSelector';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import barbersData from '../data/Barbers';
 
 
 
-export default function MakeAppointmentScreen({ route, navigation }) {
+export default function MakeAppointmentScreen({ route }) {
   const { barberId, userId = 'user1' } = route.params || {};
 
   const allBarbers = Array.isArray(barbersData) ? barbersData : [];
@@ -42,13 +42,10 @@ export default function MakeAppointmentScreen({ route, navigation }) {
   const handleConfirm = (date, time) => {
     // prevent double-booking same barber+slot
 
-    const conflict = appointments.some(
-      a => a.date === date && a.time === time && a.barberId === barber.id
-    );
-    if (conflict) {
-      Alert.alert('Slot unavailable', `${date} at ${time} is already booked.`);
-      return;
-    }
+    if (__DEV__ && appointments.some(a => a.date === date && a.time === time)) {
+    console.warn('Invariant: attempted to book an already taken slot', { date, time });
+    return; 
+  }
 
     const newAppt = {
       id: String(Date.now()),
@@ -69,8 +66,7 @@ export default function MakeAppointmentScreen({ route, navigation }) {
       appointments: next,
     };
 
-    Alert.alert('Booked!', `${date} at ${time}`);
-    navigation.goBack();
+    
   };
 
   return (
