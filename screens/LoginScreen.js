@@ -70,7 +70,7 @@ export default function LoginScreen({ navigation, onLogin }) {
       </View>
 
       <View style={styles.form}>
-        <Text style={styles.label}>Username or Phone</Text>
+        <Text style={styles.label}>Username or Phone, for testing use: John Doe </Text>
         <TextInput
           value={identifier}
           onChangeText={setIdentifier}
@@ -79,7 +79,7 @@ export default function LoginScreen({ navigation, onLogin }) {
           returnKeyType="next"
         />
 
-        <Text style={styles.label}>Password</Text>
+        <Text style={styles.label}>Password, for testing use: demo123</Text>
         <TextInput
           value={password}
           onChangeText={setPassword}
