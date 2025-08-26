@@ -1,3 +1,18 @@
+/**
+ * BarberDetails — Full-page screen showing a single barber's profile.
+ *
+ * Features:
+ * - Large header image of the barber
+ * - Animated bottom drawer (collapsible sheet) that expands/collapses
+ * - Displays barber's info, pricing, description, and portfolio images
+ * - CTA button to navigate to "MakeAppointment" screen with the barber's ID
+ *
+ * Animation:
+ * - Drawer height transitions between 40% and 90% of screen height
+ * - Triggered by a "See Portfolio" / "Close Portfolio" button
+ */
+
+
 import React, { useRef, useState } from 'react';
 import {
   View,
@@ -16,13 +31,18 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 
 export default function BarberDetails() {
+
+  // Get barber data from route params
   const route = useRoute();
   const { barber } = route.params;
   const navigation = useNavigation();
 
+
+  // Animated drawer height starts at 40% of screen height
   const drawerHeight = useRef(new Animated.Value(SCREEN_HEIGHT * 0.4)).current;
   const [expanded, setExpanded] = useState(false);
 
+  // Toggle between collapsed (40%) and expanded (90%) drawer heights
   const toggleDrawer = () => {
     const newHeight = expanded ? SCREEN_HEIGHT * 0.4 : SCREEN_HEIGHT * 0.9;
 

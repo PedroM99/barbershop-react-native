@@ -1,4 +1,22 @@
-// screens/MakeAppointmentScreen.js
+/**
+ * MakeAppointmentScreen — Booking flow screen for a single barber.
+ *
+ * Responsibilities:
+ * - Receives `barberId` (and optional `userId`) via route params.
+ * - Finds the target barber from `barbersData` (mock dataset).
+ * - Initializes appointment data for that barber.
+ * - Renders AppointmentSelector in "book" mode for picking a slot.
+ * - Handles booking confirmation:
+ *     - Creates a new appointment entry.
+ *     - Updates both local state AND the shared `barbersData` mock so changes persist across screens.
+ *
+ * Notes:
+ * - Currently uses local mock data, but structure is API-ready.
+ * - Prevents double booking in DEV mode (via console.warn).
+ */
+
+
+
 import React, { useMemo, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import AppointmentSelector from '../components/appointmentSelector';
@@ -8,12 +26,15 @@ import barbersData from '../data/Barbers';
 
 
 export default function MakeAppointmentScreen({ route }) {
+  // Route params: barber to book with and current user
   const { barberId, userId = 'user1' } = route.params || {};
 
+  // Defensive: ensure `barbersData` is an array
   const allBarbers = Array.isArray(barbersData) ? barbersData : [];
 
   
 
+  // Find barber index in dataset for easier updates
   const barberIndex = useMemo(
     () => allBarbers.findIndex(b => b.id === String(barberId)),
     [allBarbers, barberId]
@@ -39,6 +60,12 @@ export default function MakeAppointmentScreen({ route }) {
   }
 
   
+  /**
+   * Handle confirmed booking:
+   * - Prevent duplicate slot booking (DEV mode only).
+   * - Create a new appointment object.
+   * - Update local state AND mock dataset for persistence.
+   */
   const handleConfirm = (date, time) => {
     // prevent double-booking same barber+slot
 

@@ -1,4 +1,15 @@
-// screens/LoginScreen.js
+/**
+ * LoginScreen — Simple username/phone + password sign-in.
+ *
+ * Behavior:
+ * - Accepts either a username (exact, case-insensitive) or a phone number (normalized).
+ * - Validates against local mock `users` data.
+ * - On success: calls optional `onLogin(user)` or navigates to Home with { user }.
+ * - Displays inline error text for invalid credentials or missing fields.
+ */
+
+
+
 import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, Image } from 'react-native';
 import users from '../data/Users';
@@ -8,8 +19,12 @@ export default function LoginScreen({ navigation, onLogin }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+
+   // Remove spaces and common punctuation from phone input for reliable matching
   const normalizePhone = (p) => p.replace(/\s+/g, '').replace(/[-()]/g, '');
 
+
+  // Validate form and attempt sign-in
   const handleSubmit = () => {
     setError('');
 
@@ -21,17 +36,22 @@ export default function LoginScreen({ navigation, onLogin }) {
     const normalizedPhoneNumber = normalizePhone(identifier);
     const lowerName = identifier.toLowerCase();
 
+
+    // Find user by (normalized) phone OR (case-insensitive) username
     const user = users.find((u) => {
       const phoneMatch = u.phone && normalizePhone(u.phone) === normalizedPhoneNumber;
       const nameMatch = u.name && u.name.toLowerCase() === lowerName;
       return phoneMatch || nameMatch;
     });
 
+
+    // Credentials check
     if (!user || user.password !== password) {
       setError('Invalid username/phone or password.');
       return;
     }
 
+    // Success: prefer onLogin callback if provided, else navigate
     if (typeof onLogin === 'function') {
       onLogin(user);
     } else if (navigation?.navigate) {

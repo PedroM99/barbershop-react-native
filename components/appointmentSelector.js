@@ -1,3 +1,17 @@
+/**
+ * AppointmentSelector — Calendar + slots for three modes:
+ *  - "book": user books with a barber; past days & fully-booked days are blocked
+ *  - "my":   user reviews/cancels their own appointments
+ *  - "manage": barber/admin reviews, reschedules, or cancels by day
+ *
+ * Design notes:
+ *  - We derive `bookedByDate` from the scoped appointment list to keep a single source of truth.
+ *  - Calendar marks:
+ *      - red-ish for full days, orange-ish for partially booked
+ *      - the currently selected day gets a visible border (via customStyles)
+ *  - Keep side-effects (confirm/cancel/reschedule) in parent via callbacks.
+ */
+
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Alert, FlatList } from 'react-native';
 import { Calendar } from 'react-native-calendars';
@@ -5,23 +19,22 @@ import PropTypes from 'prop-types';
 
 export default function AppointmentSelector({
   mode = 'book',                      // 'book' | 'my' | 'manage'
-  appointments = [],                  // [{ id, date, time, barberId, customerId }]
+  appointments = [],                  
   timeSlots = ['09:00','10:00','11:00','13:00','14:00','15:00','16:00'],
   barberId,
   userId,
-  onConfirm,                          // (date, time) => void
-  onCancel,                           // (appointmentId) => void
-  onReschedule,                       // (appointmentId, date, time) => void
+  onConfirm,                          
+  onCancel,                           
+  onReschedule,                       
 }) {
 
   const today = new Date();
 
-
+  // Local UI state
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
 
 
-  // helpers
   const isPast = (dateStr) => dateStr < new Date().toISOString().split('T')[0];
 
   // Scope appointments based on mode
@@ -35,7 +48,7 @@ export default function AppointmentSelector({
     return barberId ? appointments.filter(a => a.barberId === barberId) : appointments;
   }, [appointments, mode, barberId, userId]);
 
-  // Build { date: [times...] }
+  // Build map of { date: [times...] } for quick lookups
   const bookedByDate = useMemo(() => {
     const map = {};
     scopedAppointments.forEach(({ date, time }) => {
@@ -45,7 +58,7 @@ export default function AppointmentSelector({
     return map;
   }, [scopedAppointments]);
 
-  // Mark calendar days: full (red), limited (orange)
+  // Calendar marked dates: full (red), partial (orange), selected (blue border)
   const markedDates = useMemo(() => {
     const marks = {};
     Object.keys(bookedByDate).forEach(date => {
@@ -53,26 +66,28 @@ export default function AppointmentSelector({
       const total = timeSlots.length;
 
       if (bookedCount === total) {
+        // Full day booked
         marks[date] = {
           selected: true,
           selectedColor: '#ffcccc',
           ...(mode === 'book' ? { disabled: true, disableTouchEvent: true } : {}),
         };
       } else if (bookedCount > 0) {
+        // Partially booked
         marks[date] = { selected: true, selectedColor: '#ffe4b5' };
       }
     });
 
     if (selectedDate) {
-  // If already has a mark (like orange background), keep it but add a border
+    // Add a visible border ring to the selected day while preserving any existing mark
     marks[selectedDate] = {
       ...(marks[selectedDate] || {}),
       selected: true,
       customStyles: {
         container: {
           borderWidth: 2,
-          borderColor: '#4e99e9ff', // bright blue border
-          borderRadius: 18, // make sure it stays circular
+          borderColor: '#4e99e9ff', 
+          borderRadius: 18, 
           },
       },
     };
@@ -80,11 +95,16 @@ export default function AppointmentSelector({
     return marks;
   }, [bookedByDate, selectedDate, timeSlots, mode]);
 
+
+  // Utility: which slots are free for a given date
   const getAvailableSlots = (date) => {
     const taken = bookedByDate[date] || [];
     return timeSlots.filter(slot => !taken.includes(slot));
   };
 
+
+
+  // Calendar day click handler
   const handleDayPress = (day) => {
     const date = day.dateString;
 

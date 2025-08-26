@@ -1,3 +1,22 @@
+/**
+ * FooterNavigation — Floating bottom navigation bar.
+ * 
+ * Displays three icon buttons:
+ *  - Calendar icon → Appointments screen
+ *  - Home icon → Home screen
+ *  - Profile icon → User profile screen
+ *
+ * Positioning:
+ *  - Absolute at the bottom with rounded background container
+ *  - Uses shadows/elevation for floating effect
+ *
+ * Props:
+ *  - onPressAppointments: callback when appointments button is pressed
+ *  - onPressHome: callback when home button is pressed
+ *  - onPressProfile: callback when profile button is pressed
+ */
+
+
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';

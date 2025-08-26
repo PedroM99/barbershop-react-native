@@ -1,3 +1,14 @@
+/**
+ * HomeScreen — Main landing page of the app.
+ *
+ * Features:
+ * - Displays a welcome message (personalized if `user` is passed via route params)
+ * - Grid of barber cards (2-column FlatList)
+ * - Clicking a barber navigates to the BarberDetails screen with that barber's data
+ * - Wrapped in AppLayout, which provides consistent SafeArea and bottom navigation
+ */
+
+
 import React from 'react';
 import { View, Text, StyleSheet, Alert, FlatList } from 'react-native';
 import user_placeholder from '../assets/user_placeholder.png';
@@ -12,6 +23,7 @@ export default function HomeScreen() {
   
   const navigation = useNavigation();
   const { params } = useRoute();
+  // User info passed from login or other screens
   const user = params?.user;
   const userId = user?.id; 
   const firstName = user?.name? user.name.match(/^\S+/)[0] : '';

@@ -1,8 +1,16 @@
+/**
+ * Barber — Small card component for a single barber.
+ * Renders an image, name, and specialty, and triggers `onPress` when tapped.
+ * Used inside grid/list layouts on the Home screen.
+ */
+
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 
-
+// Get device width to size cards responsively
 const screenWidth = Dimensions.get('window').width;
+
+// Each card takes ~half the width minus margins/padding for a 2-column layout
 const itemSize = screenWidth / 2 - 50;
 
 export default function Barber({ name, specialty, image, onPress }) {

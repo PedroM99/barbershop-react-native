@@ -1,4 +1,15 @@
-// screens/ProfileScreen.js
+/**
+ * ProfileScreen — Displays basic user profile details.
+ *
+ * Features:
+ * - Shows avatar, name, and ID from `route.params.user`.
+ * - Displays contact info (currently only phone number).
+ * - Provides placeholder actions: "Edit Profile" and "Log Out".
+ * - Handles missing user gracefully by showing fallback message & "Go Back" button.
+ *
+ * Current State:
+ * - Minimal implementation, ready to be expanded with real profile editing and logout logic.
+ */
 import React from 'react';
 import { View, Text, Image, StyleSheet, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,6 +20,7 @@ export default function ProfileScreen() {
   const navigation = useNavigation();
   const user = params?.user;
 
+  // Fallback UI if no user is passed via navigation
   if (!user) {
     return (
       <SafeAreaView style={styles.safeArea}>
