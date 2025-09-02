@@ -10,27 +10,25 @@
 
 
 import React from 'react';
-import { View, Text, StyleSheet, Alert, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
 import user_placeholder from '../assets/user_placeholder.png';
 import Barber from '../components/barber';
 import Barbers from '../data/Barbers'; 
 import AppLayout from '../components/appLayout';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useUser } from '../context/UserContext';
 
 
 export default function HomeScreen() {
   
   const navigation = useNavigation();
-  const { params } = useRoute();
-  // User info passed from login or other screens
-  const user = params?.user;
-  const userId = user?.id; 
+  const { user } = useUser();
   const firstName = user?.name? user.name.match(/^\S+/)[0] : '';
 
   return (
     <AppLayout>
-    <SafeAreaView style = {styles.safeArea}>
+    <View style = {styles.screen}>
       <View style = {styles.header}>
         <Text style={styles.title}>{user? 'Welcome ' + firstName : 'Welcome to the Barber Shop'} </Text>
       </View>
@@ -40,6 +38,7 @@ export default function HomeScreen() {
         columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: 20 }}
         showsVerticalScrollIndicator={false}
         data={Barbers}
+        contentContainerStyle= {{paddingBottom: 100}}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <Barber
@@ -50,13 +49,13 @@ export default function HomeScreen() {
           />
         )}
       />
-    </SafeAreaView>
+    </View>
     </AppLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  screen: {
     flex: 1,
     backgroundColor: '#fff',
   },

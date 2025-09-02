@@ -8,6 +8,7 @@ import LoginScreen from './screens/LoginScreen';
 import ProfileScreen from './screens/ProfileScreen';  
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import MakeAppointmentScreen from './screens/MakeAppointmentScreen';
+import { UserProvider } from './context/UserContext';
 
 
 const Stack = createNativeStackNavigator();
@@ -15,7 +16,8 @@ const Stack = createNativeStackNavigator();
 export default function App() {
   return (
   <GestureHandlerRootView style={{ flex: 1 }}>
-    <NavigationContainer>
+    <UserProvider>
+      <NavigationContainer>
       <Stack.Navigator initialRouteName="Login">
         <Stack.Screen
           name="Login"
@@ -30,7 +32,7 @@ export default function App() {
         <Stack.Screen
           name="Profile"
           component={ProfileScreen}
-          options={{ headerShown: true, title: 'Barber Details' }}
+          options={{ headerShown: true, title: 'Profile' }}
         />
         <Stack.Screen
           name="BarberDetails"
@@ -44,6 +46,7 @@ export default function App() {
         />
       </Stack.Navigator>
     </NavigationContainer>
+    </UserProvider>
   </GestureHandlerRootView>
   );
 }

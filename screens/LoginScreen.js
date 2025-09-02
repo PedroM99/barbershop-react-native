@@ -13,11 +13,13 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, Image } from 'react-native';
 import users from '../data/Users';
+import { useUser } from '../context/UserContext';
 
-export default function LoginScreen({ navigation, onLogin }) {
+export default function LoginScreen({ navigation }) {
   const [identifier, setIdentifier] = useState(''); // username or phone
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const { setUser } = useUser();
 
 
    // Remove spaces and common punctuation from phone input for reliable matching
@@ -51,14 +53,12 @@ export default function LoginScreen({ navigation, onLogin }) {
       return;
     }
 
-    // Success: prefer onLogin callback if provided, else navigate
-    if (typeof onLogin === 'function') {
-      onLogin(user);
-    } else if (navigation?.navigate) {
+    // Success! Clear form and navigate
+      setUser(user);            // <--- save globally
       setIdentifier('');
-      setPassword(''); 
-      navigation.navigate('Home', { user });
-    }
+      setPassword('');
+      navigation.navigate('Home'); // <--- no need to pass { user }
+
   };
 
   return (

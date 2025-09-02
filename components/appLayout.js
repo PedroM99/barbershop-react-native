@@ -7,22 +7,20 @@
  */
 
 import React from 'react';
-import { SafeAreaView, View, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Footer from './footerNavigation';
 
-const FOOTER_HEIGHT = 88; 
 
 export default function AppLayout({ children }) {
-  const navigation = useNavigation();
-  const { params } = useRoute();
-  const user = params?.user; 
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={[styles.content, { paddingBottom: FOOTER_HEIGHT }]}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']} >
+      <View style={styles.content}>
         {children}
       </View>
+      
       <Footer/>
     </SafeAreaView>
   );

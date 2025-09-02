@@ -22,6 +22,7 @@ import { View, StyleSheet } from 'react-native';
 import AppointmentSelector from '../components/appointmentSelector';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import barbersData from '../data/Barbers';
+import AppLayout from '../components/appLayout';
 
 
 
@@ -97,6 +98,7 @@ export default function MakeAppointmentScreen({ route }) {
   };
 
   return (
+    <AppLayout>
     <SafeAreaView style={styles.container}>
       <AppointmentSelector
         mode="book"
@@ -106,6 +108,7 @@ export default function MakeAppointmentScreen({ route }) {
         onConfirm={handleConfirm}
       />
     </SafeAreaView>
+    </AppLayout>
   );
 }
 

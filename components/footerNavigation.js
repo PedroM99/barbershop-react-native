@@ -9,31 +9,34 @@
  * Positioning:
  *  - Absolute at the bottom with rounded background container
  *  - Uses shadows/elevation for floating effect
- *
- * Props:
- *  - onPressAppointments: callback when appointments button is pressed
- *  - onPressHome: callback when home button is pressed
- *  - onPressProfile: callback when profile button is pressed
  */
 
 
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Pressable, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export default function Footer({ onPressAppointments, onPressHome, onPressProfile }) {
+
+export default function Footer() {
+
+   const navigation = useNavigation();
+   const insets = useSafeAreaInsets();
+
+
   return (
-    <View style={styles.container}>
+    <View pointerEvents='box-none' style={[styles.container, { bottom: insets.bottom + 12 }]}>
       <View style={styles.navBar}>
-        <Pressable style={styles.navButton} onPress={onPressAppointments}>
+        <Pressable style={styles.navButton} onPress={() => navigation.navigate('Appointments')}>
           <MaterialIcons name="event" size={32} color="#222" />
         </Pressable>
 
-        <Pressable style={styles.navButton} onPress={onPressHome}>
+        <Pressable style={styles.navButton} onPress={() => navigation.navigate('Home')}>
           <MaterialIcons name="home" size={32} color="#222" />
         </Pressable>
 
-        <Pressable style={styles.navButton} onPress={onPressProfile}>
+        <Pressable style={styles.navButton} onPress={() => navigation.navigate('Profile')}>
           <MaterialIcons name="person" size={32} color="#222" />
         </Pressable>
         
@@ -48,6 +51,7 @@ const styles = StyleSheet.create({
     bottom: 20,
     left: 10,
     right: 10,
+    zIndex: 1000,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -71,10 +75,5 @@ const styles = StyleSheet.create({
     paddingVertical: 10,      // more height
     paddingHorizontal: 20,    // more width
     minWidth: 80
-  },
-  label: {
-    fontSize: 10,
-    marginTop: 2,
-    color: '#222',
   },
 });

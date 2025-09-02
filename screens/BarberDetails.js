@@ -26,6 +26,8 @@ import {
 } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
+import AppLayout from '../components/appLayout';
+
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -56,6 +58,7 @@ export default function BarberDetails() {
   };
 
   return (
+    <AppLayout>
     <View style={styles.container}>
       <Image source={barber.image} style={styles.image} />
 
@@ -106,6 +109,7 @@ export default function BarberDetails() {
         </ScrollView>
       </Animated.View>
     </View>
+    </AppLayout>
   );
 }
 
