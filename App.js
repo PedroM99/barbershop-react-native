@@ -32,7 +32,7 @@ export default function App() {
         <Stack.Screen
           name="Profile"
           component={ProfileScreen}
-          options={{ headerShown: true, title: 'Profile' }}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="BarberDetails"

@@ -8,15 +8,14 @@
 
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Footer from './footerNavigation';
 
 
 export default function AppLayout({ children }) {
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']} >
+    <SafeAreaView style={styles.safeArea} edges={[ 'left', 'right']} >
       <View style={styles.content}>
         {children}
       </View>

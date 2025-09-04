@@ -18,6 +18,7 @@ import AppLayout from '../components/appLayout';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useUser } from '../context/UserContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 export default function HomeScreen() {
@@ -25,11 +26,12 @@ export default function HomeScreen() {
   const navigation = useNavigation();
   const { user } = useUser();
   const firstName = user?.name? user.name.match(/^\S+/)[0] : '';
+  const insets = useSafeAreaInsets();
 
   return (
     <AppLayout>
     <View style = {styles.screen}>
-      <View style = {styles.header}>
+      <View style = {[styles.header, {paddingTop: insets.top} ]}>
         <Text style={styles.title}>{user? 'Welcome ' + firstName : 'Welcome to the Barber Shop'} </Text>
       </View>
       <FlatList

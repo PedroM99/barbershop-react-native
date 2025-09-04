@@ -27,34 +27,56 @@ import {
 import { useRoute } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import AppLayout from '../components/appLayout';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useWindowDimensions } from 'react-native';
 
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+
 
 
 export default function BarberDetails() {
+
+  const { height: SCREEN_HEIGHT } =  useWindowDimensions();
 
   // Get barber data from route params
   const route = useRoute();
   const { barber } = route.params;
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
+
+  const COLLAPSED_HEIGHT = SCREEN_HEIGHT * 0.4;
+  const EXPANDED_HEIGHT  = SCREEN_HEIGHT * 0.86;
+
+  React.useEffect(() => {
+    drawerHeight.setValue(expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT);
+  }, [SCREEN_HEIGHT, expanded]);
+  
+
+  const COLLAPSED_BOTTOM = insets.bottom + 30; // ≈ footer height
+  const EXPANDED_BOTTOM  = insets.bottom + 15; // tiny breathing room
 
 
   // Animated drawer height starts at 40% of screen height
-  const drawerHeight = useRef(new Animated.Value(SCREEN_HEIGHT * 0.4)).current;
+  const drawerHeight = useRef(new Animated.Value(COLLAPSED_HEIGHT)).current;
+  const drawerBottom = useRef(new Animated.Value(COLLAPSED_BOTTOM)).current;
   const [expanded, setExpanded] = useState(false);
 
   // Toggle between collapsed (40%) and expanded (90%) drawer heights
   const toggleDrawer = () => {
-    const newHeight = expanded ? SCREEN_HEIGHT * 0.4 : SCREEN_HEIGHT * 0.9;
-
-    Animated.timing(drawerHeight, {
-      toValue: newHeight,
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-
-    setExpanded(!expanded);
+    const next = !expanded;
+    Animated.parallel([
+      Animated.timing(drawerHeight, {
+        toValue: next ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT,
+        duration: 250,
+        useNativeDriver: false,
+      }),
+      Animated.timing(drawerBottom, {
+        toValue: next ? EXPANDED_BOTTOM : COLLAPSED_BOTTOM,
+        duration: 250,
+        useNativeDriver: false,
+      }),
+    ]).start();
+    setExpanded(next);
   };
 
   return (
@@ -62,14 +84,15 @@ export default function BarberDetails() {
     <View style={styles.container}>
       <Image source={barber.image} style={styles.image} />
 
-      <Animated.View style={[styles.drawer, { height: drawerHeight }]}>
-        <ScrollView contentContainerStyle={styles.sheetContent}
+      <Animated.View style={[styles.drawer, { height: drawerHeight, bottom: drawerBottom}]}>
+        <ScrollView 
+        contentContainerStyle={styles.sheetContent}
         showsVerticalScrollIndicator={false}
         >
           <Pressable onPress={toggleDrawer} style={styles.expandButton}>
             <Text style={styles.expandButtonText}>
               {expanded ? 'Close Portfolio' : 'See Portfolio'}
-              </Text>
+            </Text>
           </Pressable>
 
                     <Text style={styles.name}>{barber.name}</Text>
@@ -84,7 +107,7 @@ export default function BarberDetails() {
 
            <Pressable
             style={styles.button}
-            onPress={() => navigation.navigate('MakeAppointment', { barberId: barber.id, userId: 'user1' })}
+            onPress={() => navigation.navigate('MakeAppointment', { barberId: barber.id })}
            >
             <Text style={styles.buttonText}>Make Appointment</Text>
            </Pressable>
@@ -119,12 +142,11 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    height: '50%',
+    height: '40%',
     resizeMode: 'cover',
   },
   drawer: {
     position: 'absolute',
-    bottom: 0,
     width: '100%',
     backgroundColor: '#fff',
     borderTopLeftRadius: 20,
@@ -146,7 +168,7 @@ const styles = StyleSheet.create({
   expandButtonText: {
     fontSize: 14,
     color: 'white',
-    fontWeight: 600,
+    fontWeight: '600',
   },
   name: {
     fontSize: 22,
