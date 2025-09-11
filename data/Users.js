@@ -11,7 +11,7 @@ const users = [
     password: 'demo123',
     appointments: [
       { id: '101', barberId: '1', date: '2025-08-14', time: '09:00', status: 'completed' },
-      { id: '501', barberId: '5', date: '2025-08-28', time: '13:00', status: 'scheduled' },
+      { id: '501', barberId: '5', date: '2025-08-28', time: '13:00', status: 'completed' },
     ],
   },
   {

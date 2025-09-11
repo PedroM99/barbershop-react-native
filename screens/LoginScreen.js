@@ -11,7 +11,7 @@
 
 
 import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, Image } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, Image, InteractionManager, Keyboard } from 'react-native';
 import users from '../data/Users';
 import { useUser } from '../context/UserContext';
 
@@ -30,13 +30,13 @@ export default function LoginScreen({ navigation }) {
   const handleSubmit = () => {
     setError('');
 
-    if (!identifier || !password) {
+    if (!identifier /* || !password */) {
       setError('Please enter your username/phone and password.');
       return;
     }
 
     const normalizedPhoneNumber = normalizePhone(identifier);
-    const lowerName = identifier.toLowerCase();
+    const lowerName = identifier.toLowerCase().trim();
 
 
     // Find user by (normalized) phone OR (case-insensitive) username
@@ -47,17 +47,28 @@ export default function LoginScreen({ navigation }) {
     });
 
 
-    // Credentials check
-    if (!user || user.password !== password) {
-      setError('Invalid username/phone or password.');
-      return;
-    }
+    // // Credentials check
+    // if (!user || user.password !== password) {
+    //   setError('Invalid username/phone or password.');
+    //   return;
+    // }
 
-    // Success! Clear form and navigate
+    Keyboard.dismiss();
+    InteractionManager.runAfterInteractions(() => {
+      // Success! Clear form and navigate
       setUser(user);            // <--- save globally
       setIdentifier('');
       setPassword('');
-      navigation.navigate('Home'); // <--- no need to pass { user }
+
+
+      navigation.reset({
+      index: 0,
+      routes: [{ name: 'Home' }],
+      });
+
+    })
+
+    
 
   };
 

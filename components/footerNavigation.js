@@ -12,12 +12,13 @@
  */
 
 
-import React from 'react';
+import React, {useState} from 'react';
 import { View, Pressable, StyleSheet, Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUser } from '../context/UserContext';
+import ConfirmAlert from './confirmAlert';
 
 
 export default function Footer() {
@@ -25,6 +26,7 @@ export default function Footer() {
    const navigation = useNavigation();
    const insets = useSafeAreaInsets();
    const { setUser } = useUser();
+   const [showLogout, setShowLogout] = useState(false);
 
    const confirmLogout = () =>
     Alert.alert('Log out', 'Are you sure you want to log out?', [
@@ -42,7 +44,7 @@ export default function Footer() {
   return (
     <View pointerEvents='box-none' style={[styles.container, { bottom: insets.bottom + 12 }]}>
       <View style={styles.navBar}>
-        <Pressable style={styles.navButton} onPress={confirmLogout}>
+        <Pressable style={styles.navButton} onPress={() => setShowLogout(true)}>
           <MaterialIcons name="logout" size={32} color="#222" />
         </Pressable>
 
@@ -55,6 +57,16 @@ export default function Footer() {
         </Pressable>
         
       </View>
+      <ConfirmAlert
+        visible={showLogout}
+        message="Are you sure you want to log out?"
+        onCancel={() => setShowLogout(false)}
+        onConfirm={() => {
+          setUser(null);
+          navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+          setShowLogout(false);
+        }}
+      />
     </View>
   );
 }
