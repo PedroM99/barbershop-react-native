@@ -9,6 +9,7 @@ export default function ConfirmAlert({
   message,
   onConfirm,
   onCancel,
+  type = "confirm",
 }) {
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.96)).current;
@@ -32,9 +33,11 @@ export default function ConfirmAlert({
           {!!message && <Text style={styles.message}>{message}</Text>}
 
           <View style={styles.actions}>
-            <Pressable style={[styles.iconBtn, styles.cancelBtn]} onPress={onCancel}>
-              <MaterialIcons name="close" size={28} color="#222" />
-            </Pressable>
+            {type === "confirm" && (
+              <Pressable style={[styles.iconBtn, styles.cancelBtn]} onPress={onCancel}>
+                <MaterialIcons name="close" size={28} color="#222" />
+              </Pressable>
+            )}
             <Pressable
               style={[styles.iconBtn, styles.confirmBtn]}
               onPress={onConfirm}

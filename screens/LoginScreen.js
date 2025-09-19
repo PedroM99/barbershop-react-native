@@ -106,6 +106,13 @@ export default function LoginScreen({ navigation }) {
         <Pressable style={styles.primaryBtn} onPress={handleSubmit}>
           <Text style={styles.primaryBtnText}>Sign In</Text>
         </Pressable>
+
+        <Pressable
+          style={styles.secondaryBtn}
+          onPress={() => navigation.navigate("Register")}
+        >
+          <Text style={styles.secondaryBtnText}>Don’t have an account? Register</Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -138,4 +145,13 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   primaryBtnText: { color: '#fff', fontWeight: '700' },
+  secondaryBtn: {
+    marginTop: 12,
+    paddingVertical: 10,
+    alignItems: "center",
+  },
+  secondaryBtnText: {
+    color: "#222",
+    fontWeight: "600",
+  },
 });

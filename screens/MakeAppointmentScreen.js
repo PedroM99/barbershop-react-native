@@ -160,6 +160,16 @@ export default function MakeAppointmentScreen({ route }) {
     }
   };
 
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+      return date.toLocaleDateString("en-US", {
+        month: "short", 
+        day: "numeric", 
+      }
+    );
+  };
+
+
   return (
     <AppLayout>
       <SafeAreaView style={styles.container}>
@@ -177,7 +187,7 @@ export default function MakeAppointmentScreen({ route }) {
         title="Replace existing appointment?"
         message={
           pendingBooking
-            ? `Replace the appointment on ${pendingBooking.existing.date} at ${pendingBooking.existing.time} with ${pendingBooking.date} at ${pendingBooking.time}?`
+            ? `Replace the appointment on ${formatDate(pendingBooking.existing.date)} at ${pendingBooking.existing.time} with ${formatDate(pendingBooking.date)} at ${pendingBooking.time}?`
             : ''
         }
         destructive

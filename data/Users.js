@@ -60,4 +60,34 @@ const users = [
   },
 ];
 
+
+export function findUserByPhone(phone) {
+  const norm = String(phone).replace(/\s+/g, '');
+  return users.find(u => u.phone && u.phone.replace(/\s+/g, '') === norm);
+};
+
+function getNextUserId() {
+  // Extract numeric suffixes from ids that match /^user(\d+)$/
+  const maxNum = users.reduce((max, u) => {
+    const m = /^user(\d+)$/.exec(u.id);
+    if (!m) return max;               // ignore non-matching ids, if any
+    const n = parseInt(m[1], 10);
+    return Number.isFinite(n) && n > max ? n : max;
+  }, 0);
+  return `user${maxNum + 1 || 1}`;     // start at user1 if empty
+};
+
+export function addUser({ name, phone, password }) {
+  const newUser = {
+    id: getNextUserId(),
+    name: String(name || '').trim(),
+    phone: String(phone || '').trim(),
+    image: placeholder,
+    password,            // mock only (no hashing)
+    appointments: [],
+  };
+  users.push(newUser);
+  return newUser;
+};
+
 export default users;

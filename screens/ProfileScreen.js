@@ -253,6 +253,11 @@ export default function ProfileScreen() {
                 <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>My Appointments</Text>
               </View>
             )}
+            {sections.length === 0 && (
+              <View style={{ paddingHorizontal: 20, paddingTop: 8 }}>
+                <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>You have no booked appointments...</Text>
+              </View>
+            )}
           </View>
         }
         renderSectionHeader={({ section: { title } }) => (

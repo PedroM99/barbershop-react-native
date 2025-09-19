@@ -28,19 +28,6 @@ export default function Footer() {
    const { setUser } = useUser();
    const [showLogout, setShowLogout] = useState(false);
 
-   const confirmLogout = () =>
-    Alert.alert('Log out', 'Are you sure you want to log out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Log Out',
-        style: 'destructive',
-        onPress: () => {
-          setUser(null);
-          navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
-        },
-      },
-    ]);
-
   return (
     <View pointerEvents='box-none' style={[styles.container, { bottom: insets.bottom + 12 }]}>
       <View style={styles.navBar}>
@@ -48,7 +35,15 @@ export default function Footer() {
           <MaterialIcons name="logout" size={32} color="#222" />
         </Pressable>
 
-        <Pressable style={styles.navButton} onPress={() => navigation.navigate('Home')}>
+        <Pressable style={styles.navButton} onPress={() => 
+          {
+          if (navigation.getState?.().routes?.[navigation.getState().index]?.name === 'Home') return;  
+          navigation.reset({
+            index: 0,
+            routes: [{name: 'Home'}],
+          })
+          }
+          }>
           <MaterialIcons name="home" size={32} color="#222" />
         </Pressable>
 

@@ -6,6 +6,7 @@ import HomeScreen from './screens/HomeScreen';
 import BarberDetails from './screens/BarberDetails';
 import LoginScreen from './screens/LoginScreen';
 import ProfileScreen from './screens/ProfileScreen';  
+import RegisterScreen from './screens/RegisterScreen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import MakeAppointmentScreen from './screens/MakeAppointmentScreen';
 import { UserProvider } from './context/UserContext';
@@ -24,6 +25,11 @@ export default function App() {
           component={LoginScreen}
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+              name="Register"                         
+              component={RegisterScreen}
+              options={{ headerShown: false }}
+            />
         <Stack.Screen
           name="Home"
           component={HomeScreen}
