@@ -10,7 +10,7 @@
 
 
 import React, {useCallback, useState} from 'react';
-import { View, Text, StyleSheet, FlatList, BackHandler } from 'react-native';
+import { View, Text, FlatList, BackHandler, ImageBackground } from 'react-native';
 import user_placeholder from '../assets/user_placeholder.png';
 import Barber from '../components/barber';
 import Barbers from '../data/Barbers'; 
@@ -19,6 +19,7 @@ import ConfirmAlert from "../components/confirmAlert";
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useUser } from '../context/UserContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import background from '../assets/background.png';
 
 
 export default function HomeScreen() {
@@ -50,28 +51,37 @@ export default function HomeScreen() {
 
   return (
     <AppLayout>
-    <View style = {styles.screen}>
-      <View style = {[styles.header, {paddingTop: insets.top} ]}>
-        <Text style={styles.title}>{user? 'Welcome ' + firstName : 'Welcome to the Barber Shop'} </Text>
-      </View>
-      <FlatList
-        key={2}
-        numColumns={2}
-        columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: 20 }}
-        showsVerticalScrollIndicator={false}
-        data={Barbers}
-        contentContainerStyle= {{paddingBottom: 100}}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <Barber
-            name={item.name}
-            specialty={item.specialty}
-            image={user_placeholder}
-            onPress={() => navigation.navigate('BarberDetails', { barber: item })}
-          />
-        )}
-      />
+    <ImageBackground
+      source={background}
+      resizeMode="cover"
+      className="flex-1"
+      imageStyle={{ opacity: 1 }}  
+    >
+    <View
+      className="px-5 py-2 bg-white border-b border-gray-200 items-center"
+      style={{ paddingTop: insets.top }}
+    >
+      <Text className="text-2xl font-bold text-gray-900">{user ? 'Welcome ' + firstName : 'Welcome to the Barber Shop'} </Text>
     </View>
+
+    <FlatList
+      key={2}
+      numColumns={2}
+      columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: 20 }}
+      showsVerticalScrollIndicator={false}
+      data={Barbers}
+      contentContainerStyle={{ paddingBottom: 100, paddingHorizontal: 20, paddingTop: 12 }}
+      keyExtractor={(item) => item.id.toString()}
+      renderItem={({ item }) => (
+      <Barber
+        name={item.name}
+        specialty={item.specialty}
+        image={user_placeholder}
+        onPress={() => navigation.navigate('BarberDetails', { barber: item })}
+      />
+      )}
+    />
+    </ImageBackground>
     <ConfirmAlert
         visible={showLogout}
         message="Are you sure you want to log out?"
@@ -82,21 +92,3 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  header: {
-  paddingHorizontal: 20,
-  paddingVertical: 5,
-  backgroundColor: '#fff',
-  borderBottomWidth: 1,
-  borderBottomColor: '#eee',
-  alignItems: 'center',
-},
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-});
