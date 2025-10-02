@@ -1,29 +1,17 @@
+// screens/MakeAppointmentScreen.js
 /**
  * MakeAppointmentScreen — Booking flow screen for a single barber.
- *
- * Responsibilities:
- * - Receives `barberId` (and optional `userId`) via route params.
- * - Finds the target barber from `barbersData` (mock dataset).
- * - Initializes appointment data for that barber.
- * - Renders AppointmentSelector in "book" mode for picking a slot.
- * - Handles booking confirmation:
- *     - Creates a new appointment entry.
- *     - Updates both local state AND the shared `barbersData` mock so changes persist across screens.
- *
- * Notes:
- * - Currently uses local mock data, but structure is API-ready.
- * - Prevents double booking in DEV mode (via console.warn).
+ * (Styling converted to NativeWind + background image; logic unchanged)
  */
-
-import React, { useMemo, useState } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import barbersData from '../data/Barbers';
-import AppLayout from '../components/appLayout';
-import { useUser } from '../context/UserContext';
-import AppointmentSelector from '../components/appointmentSelector';
-import ConfirmAlert from '../components/confirmAlert';
+import React, { useMemo, useState } from "react";
+import { View, Alert, ImageBackground } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import barbersData from "../data/Barbers";
+import AppLayout from "../components/appLayout";
+import { useUser } from "../context/UserContext";
+import AppointmentSelector from "../components/appointmentSelector";
+import ConfirmAlert from "../components/confirmAlert";
 
 export default function MakeAppointmentScreen({ route }) {
   // Route params: barber to book with and current user
@@ -31,7 +19,7 @@ export default function MakeAppointmentScreen({ route }) {
   const { user, setUser } = useUser();
   const currentUserId = user?.id;
 
-  // Modern replace-confirm dialog state
+  // Replace-confirm dialog state
   const [pendingBooking, setPendingBooking] = useState(null); // { date, time, existing }
 
   // Defensive: ensure `barbersData` is an array
@@ -67,9 +55,13 @@ export default function MakeAppointmentScreen({ route }) {
   if (!barber) {
     return (
       <AppLayout>
-        <SafeAreaView style={styles.container}>
-          <View style={{ padding: 16 }} />
-        </SafeAreaView>
+        <ImageBackground
+          source={require("../assets/background.png")}
+          resizeMode="cover"
+          className="flex-1"
+        >
+          <SafeAreaView className="flex-1" />
+        </ImageBackground>
       </AppLayout>
     );
   }
@@ -79,7 +71,7 @@ export default function MakeAppointmentScreen({ route }) {
     if (!user?.appointments?.length) return null;
     const now = new Date();
     const upcoming = user.appointments
-      .filter((a) => whenOf(a) >= now && a.status !== 'completed' && a.status !== 'canceled')
+      .filter((a) => whenOf(a) >= now && a.status !== "completed" && a.status !== "canceled")
       .sort((a, b) => whenOf(a) - whenOf(b));
     return upcoming[0] || null; // earliest upcoming
   };
@@ -91,7 +83,7 @@ export default function MakeAppointmentScreen({ route }) {
       date,
       time,
       customerId: currentUserId,
-      status: 'scheduled',
+      status: "scheduled",
       barberId: String(barberId),
     };
 
@@ -128,7 +120,7 @@ export default function MakeAppointmentScreen({ route }) {
       if (!prev) return prev;
       const withoutOld = existingUpcoming
         ? (prev.appointments || []).filter((a) => a.id !== existingUpcoming.id)
-        : (prev.appointments || []);
+        : prev.appointments || [];
       return {
         ...prev,
         appointments: [
@@ -147,7 +139,7 @@ export default function MakeAppointmentScreen({ route }) {
    */
   const handleConfirm = (date, time) => {
     if (appointments.some((a) => a.date === date && a.time === time)) {
-      Alert.alert('Time unavailable', 'That time is already booked.');
+      Alert.alert("Time unavailable", "That time is already booked.");
       return;
     }
 
@@ -162,47 +154,49 @@ export default function MakeAppointmentScreen({ route }) {
 
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
-      return date.toLocaleDateString("en-US", {
-        month: "short", 
-        day: "numeric", 
-      }
-    );
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
-
 
   return (
     <AppLayout>
-      <SafeAreaView style={styles.container}>
-        <AppointmentSelector
-          mode="book"
-          appointments={appointments}
-          barberId={barberId}
-          userId={currentUserId}
-          onConfirm={handleConfirm}
-        />
-      </SafeAreaView>
+      <ImageBackground
+        source={require("../assets/background.png")}
+        resizeMode="cover"
+        className="flex-1"
+      >
+        <SafeAreaView className="flex-1">
+          {/* Optional wrapper gives breathing room without touching logic */}
+          <View className="flex-1 px-4 pt-3">
+            <View className="flex-1 rounded-2xl bg-neutral-900/60 border border-white/10 p-3" style={{ elevation: 2 }}>
+              <AppointmentSelector
+                mode="book"
+                appointments={appointments}
+                barberId={barberId}
+                userId={currentUserId}
+                onConfirm={handleConfirm}
+              />
+            </View>
+          </View>
+        </SafeAreaView>
 
-      <ConfirmAlert
-        visible={!!pendingBooking}
-        title="Replace existing appointment?"
-        message={
-          pendingBooking
-            ? `Replace the appointment on ${formatDate(pendingBooking.existing.date)} at ${pendingBooking.existing.time} with ${formatDate(pendingBooking.date)} at ${pendingBooking.time}?`
-            : ''
-        }
-        destructive
-        onCancel={() => setPendingBooking(null)}
-        onConfirm={() => {
-          if (pendingBooking) {
-            commitBooking(pendingBooking.date, pendingBooking.time, pendingBooking.existing);
+        <ConfirmAlert
+          visible={!!pendingBooking}
+          title="Replace existing appointment?"
+          message={
+            pendingBooking
+              ? `Replace the appointment on ${formatDate(pendingBooking.existing.date)} at ${pendingBooking.existing.time} with ${formatDate(pendingBooking.date)} at ${pendingBooking.time}?`
+              : ""
           }
-          setPendingBooking(null);
-        }}
-      />
+          destructive
+          onCancel={() => setPendingBooking(null)}
+          onConfirm={() => {
+            if (pendingBooking) {
+              commitBooking(pendingBooking.date, pendingBooking.time, pendingBooking.existing);
+            }
+            setPendingBooking(null);
+          }}
+        />
+      </ImageBackground>
     </AppLayout>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-});

@@ -1,15 +1,15 @@
-import React, { useEffect, useRef } from 'react';
-import {
-  Modal, View, Text, Pressable, StyleSheet, Animated
-} from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+// components/confirmAlert.js
+import React, { useEffect, useRef } from "react";
+import { Modal, View, Text, Pressable, Animated } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
 
 export default function ConfirmAlert({
   visible,
   message,
   onConfirm,
   onCancel,
-  type = "confirm",
+  type = "confirm",       // "confirm" -> two buttons, "info" -> single confirm
+  destructive = false,    // backward-compat: when true, confirm button uses danger tone
 }) {
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.96)).current;
@@ -18,31 +18,62 @@ export default function ConfirmAlert({
     if (visible) {
       Animated.parallel([
         Animated.timing(opacity, { toValue: 1, duration: 140, useNativeDriver: true }),
-        Animated.spring(scale, { toValue: 1, useNativeDriver: true, stiffness: 180, damping: 18 })
+        Animated.spring(scale, { toValue: 1, useNativeDriver: true, stiffness: 180, damping: 18 }),
       ]).start();
     } else {
       opacity.setValue(0);
       scale.setValue(0.96);
     }
-  }, [visible]);
+  }, [visible, opacity, scale]);
+
+  const brass = "#B08D57";
+  const danger = "#8C3A37";
+  const confirmBg = destructive ? danger : brass;
+  const confirmIconColor = "#111"; // on brass
+  const confirmIconColorDanger = "#fff"; // on danger
+
+  const showCancel = type === "confirm";
 
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onCancel}>
-      <View style={styles.backdrop}>
-        <Animated.View style={[styles.card, { opacity, transform: [{ scale }] }]}>
-          {!!message && <Text style={styles.message}>{message}</Text>}
+      {/* Backdrop */}
+      <View className="flex-1 bg-black/60 items-center justify-center p-6">
+        {/* Card */}
+        <Animated.View
+          style={{ opacity, transform: [{ scale }] }}
+          className="w-full rounded-2xl p-5 bg-neutral-900 border border-white/10"
+        >
+          {!!message && (
+            <Text
+              style={{ fontFamily: "CormorantGaramond-SemiBold" }}
+              className="text-[20px] text-[#EDEADE] mb-3"
+            >
+              {message}
+            </Text>
+          )}
 
-          <View style={styles.actions}>
-            {type === "confirm" && (
-              <Pressable style={[styles.iconBtn, styles.cancelBtn]} onPress={onCancel}>
-                <MaterialIcons name="close" size={28} color="#222" />
+          <View className="flex-row justify-end gap-3 mt-2">
+            {showCancel && (
+              <Pressable
+                onPress={onCancel}
+                android_ripple={{ color: "rgba(255,255,255,0.08)", borderless: false }}
+                className="flex-1 h-[52px] rounded-xl items-center justify-center bg-neutral-800 border border-white/10"
+              >
+                <MaterialIcons name="close" size={26} color="#EDEADE" />
               </Pressable>
             )}
+
             <Pressable
-              style={[styles.iconBtn, styles.confirmBtn]}
               onPress={onConfirm}
+              android_ripple={{ color: "rgba(0,0,0,0.12)", borderless: false }}
+              className="flex-1 h-[52px] rounded-xl items-center justify-center"
+              style={{ backgroundColor: confirmBg }}
             >
-              <MaterialIcons name="check" size={28} color="#fff" />
+              <MaterialIcons
+                name="check"
+                size={26}
+                color={destructive ? confirmIconColorDanger : confirmIconColor}
+              />
             </Pressable>
           </View>
         </Animated.View>
@@ -50,36 +81,3 @@ export default function ConfirmAlert({
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.36)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-  },
-  card: {
-    width: '100%',
-    borderRadius: 16,
-    padding: 18,
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
-  },
-  message: { fontSize: 20, fontWeight: '600', color: '#111', marginBottom: 14 },
-
-  actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 16, marginTop: 8 },
-  iconBtn: {
-    flex: 1,
-    height: 52,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelBtn: { backgroundColor: '#f0f0f0' },
-  confirmBtn: { backgroundColor: '#111' },
-});

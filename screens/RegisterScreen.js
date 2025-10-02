@@ -1,6 +1,12 @@
 // screens/RegisterScreen.jsx
 import React, { useState } from "react";
-import { View, Text, TextInput, Pressable, StyleSheet, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  ImageBackground,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { addUser, findUserByPhone } from "../data/Users";
 import ConfirmAlert from "../components/confirmAlert";
@@ -19,94 +25,102 @@ export default function RegisterScreen() {
 
   const handleRegister = () => {
     if (!name || !phone || !password) {
-    setAlertMessage("Please fill in all required fields.");
-    setAlertVisible(true);
-    return;
+      setAlertMessage("Please fill in all required fields.");
+      setAlertVisible(true);
+      return;
     }
     if (password !== confirm) {
-    setAlertMessage("Passwords don't match. Check your password fields.");
-    setAlertVisible(true);
-    return;
+      setAlertMessage("Passwords don't match. Check your password fields.");
+      setAlertVisible(true);
+      return;
     }
     if (findUserByPhone(phone)) {
-    setAlertMessage("Phone already registered. Try logging in instead.");
-    setAlertVisible(true);
-    return;
+      setAlertMessage("Phone already registered. Try logging in instead.");
+      setAlertVisible(true);
+      return;
     }
 
     const newUser = addUser({ name, phone, password });
-
     setUser(newUser);
     navigation.reset({ index: 0, routes: [{ name: "Home" }] });
   };
 
   return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Register</Text>
+    <ImageBackground
+      source={require("../assets/background.png")}
+      resizeMode="cover"
+      className="flex-1"
+    >
+      <View className="flex-1 px-5 py-6 items-center justify-center">
+        {/* Card */}
+        <View className="w-full max-w-[520px] rounded-2xl bg-neutral-900/70 border border-white/10 p-5">
+          <Text
+            style={{ fontFamily: "CormorantGaramond-SemiBold" }}
+            className="text-[24px] text-[#EDEADE] text-center mb-5"
+          >
+            Register
+          </Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Full name"
-          value={name}
-          onChangeText={setName}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Phone"
-          value={phone}
-          onChangeText={setPhone}
-          keyboardType="phone-pad"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm password"
-          secureTextEntry
-          value={confirm}
-          onChangeText={setConfirm}
-        />
+          {/* Inputs */}
+          <TextInput
+            placeholder="Full name"
+            placeholderTextColor="#888"
+            value={name}
+            onChangeText={setName}
+            className="h-12 rounded-xl px-3 text-[16px] bg-neutral-900 border border-white/10 text-[#EDEADE] mb-3"
+          />
+          <TextInput
+            placeholder="Phone"
+            placeholderTextColor="#888"
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="phone-pad"
+            className="h-12 rounded-xl px-3 text-[16px] bg-neutral-900 border border-white/10 text-[#EDEADE] mb-3"
+          />
+          <TextInput
+            placeholder="Password"
+            placeholderTextColor="#888"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+            className="h-12 rounded-xl px-3 text-[16px] bg-neutral-900 border border-white/10 text-[#EDEADE] mb-3"
+          />
+          <TextInput
+            placeholder="Confirm password"
+            placeholderTextColor="#888"
+            secureTextEntry
+            value={confirm}
+            onChangeText={setConfirm}
+            className="h-12 rounded-xl px-3 text-[16px] bg-neutral-900 border border-white/10 text-[#EDEADE]"
+          />
 
-        <Pressable style={styles.button} onPress={handleRegister}>
-          <Text style={styles.buttonText}>Create account</Text>
-        </Pressable>
+          {/* Actions */}
+          <Pressable
+            onPress={handleRegister}
+            className="mt-4 items-center rounded-xl bg-[#B08D57] py-3"
+            android_ripple={{ color: "rgba(0,0,0,0.12)", borderless: false }}
+          >
+            <Text className="font-bold text-black">Create account</Text>
+          </Pressable>
 
-        <Pressable onPress={() => navigation.navigate("Login")}>
-          <Text style={styles.link}>Already have an account? Log in</Text>
-        </Pressable>
-        <ConfirmAlert
+          <Pressable
+            onPress={() => navigation.navigate("Login")}
+            className="mt-3 items-center"
+            android_ripple={{ color: "rgba(255,255,255,0.08)", borderless: false }}
+          >
+            <Text className="text-[#EDEADE] font-semibold">
+              Already have an account? <Text className="underline">Log in</Text>
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+
+      <ConfirmAlert
         visible={alertVisible}
         message={alertMessage}
         type="info"
         onConfirm={() => setAlertVisible(false)}
-        />
-      </View>
+      />
+    </ImageBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: "center", gap: 12 },
-  title: { fontSize: 24, fontWeight: "700", textAlign: "center", marginBottom: 20 },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    backgroundColor: "#fff",
-  },
-  button: {
-    backgroundColor: "#111",
-    padding: 14,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 10,
-  },
-  buttonText: { color: "#fff", fontSize: 16, fontWeight: "700" },
-  link: { color: "#555", textAlign: "center", marginTop: 10 },
-});

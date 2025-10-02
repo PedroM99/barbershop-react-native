@@ -1,7 +1,6 @@
 // components/barber.js
 import React from "react";
-import { Pressable, View, Image, Text, Dimensions, ImageBackground } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { Pressable, View, Image, Text, Dimensions } from "react-native";
 
 const screenWidth = Dimensions.get("window").width;
 const H_PADDING = 40;     // FlatList content horizontal padding (20 + 20)
@@ -20,44 +19,30 @@ export default function Barber({ name, specialty, image, onPress }) {
       style={{ width: ITEM_SIZE }}
       className="active:scale-95"
     >
-      <View className="shadow-sm" style={{ elevation: 3 }}>
-        {/* Wooden frame */}
-        <ImageBackground
-          source={require("../assets/Wood.png")}
-          resizeMode="cover"
-          className="rounded-sm overflow-hidden"
-        >
-          {/* slight dark glaze so the photo pops */}
-          <View className="bg-black/5 absolute inset-0" />
-          <View className="p-2">
-            <View className=" overflow-hidden bg-black/10">
-              <Image
-                source={image}
-                resizeMode="cover"
-                style={{ width: imageSize, height: imageSize }}
-                className="rounded-sm self-center"
-                accessible
-                accessibilityLabel={`${name}'s photo`}
-              />
-            </View>
-          </View>
-        </ImageBackground>
+    <View className="p-3 bg-neutral-900/50 border border-white/10 shadow-sm" style={{ elevation: 2 }}>
+      <Image
+        source={image}
+        resizeMode="cover"
+        style={{ width: imageSize, height: imageSize }}
+        className="self-center mb-2 border border-white/10 bg-neutral-800"
+        accessible
+        accessibilityLabel={`${name}'s photo`}
+      />
 
-        <LinearGradient
-         colors={["#F7E7B5", "#D4AF37", "#B8860B"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          className="mt-2 rounded-xl border border-black/30 shadow-sm"
-          style={{ paddingHorizontal: 12, paddingVertical: 8, elevation: 2 }}
-        >
-        <Text className="font-semibold text-[13px] tracking-wide uppercase text-center" numberOfLines={1}>
-          {name}
-        </Text>
-        <Text className="text-black/70 text-[12px] text-center" numberOfLines={1}>
-          {specialty}
-        </Text>
-        </LinearGradient>
-      </View>
+      <View className="h-px w-full bg-white/10 my-2" />
+
+      <Text 
+      style={{ fontFamily: "CormorantGaramond-SemiBold", fontSize: 18, lineHeight: 22  }}
+      className="text-center text-[#EDEADE]" numberOfLines={1}>
+        {name}
+      </Text>
+      <Text 
+      style={{ fontFamily: "Inter-Regular", fontSize: 13, lineHeight: 16  }}
+      className="text-center text-neutral-400 mt-0.5" numberOfLines={1}>
+        {specialty}
+      </Text>
+      
+    </View>
     </Pressable>
   );
 }

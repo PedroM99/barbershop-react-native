@@ -58,10 +58,13 @@ export default function HomeScreen() {
       imageStyle={{ opacity: 1 }}  
     >
     <View
-      className="px-5 py-2 bg-white border-b border-gray-200 items-center"
+      className="px-5 py-2 bg-neutral-900/60 border-b border-white/10 items-center"
       style={{ paddingTop: insets.top }}
     >
-      <Text className="text-2xl font-bold text-gray-900">{user ? 'Welcome ' + firstName : 'Welcome to the Barber Shop'} </Text>
+      <Text 
+      style={{ fontFamily: "CormorantGaramond-SemiBold" }}
+      className="text-2xl text-[#EDEADE]">{user ? 'Welcome ' + firstName : 'Welcome to the Barber Shop'} 
+      </Text>
     </View>
 
     <FlatList

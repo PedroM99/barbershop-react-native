@@ -1,64 +1,68 @@
-/**
- * FooterNavigation — Floating bottom navigation bar.
- * 
- * Displays three icon buttons:
- *  - Calendar icon → Appointments screen
- *  - Home icon → Home screen
- *  - Profile icon → User profile screen
- *
- * Positioning:
- *  - Absolute at the bottom with rounded background container
- *  - Uses shadows/elevation for floating effect
- */
-
-
-import React, {useState} from 'react';
-import { View, Pressable, StyleSheet, Alert } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useUser } from '../context/UserContext';
-import ConfirmAlert from './confirmAlert';
-
+import React, { useState, useMemo } from "react";
+import { View, Pressable } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useUser } from "../context/UserContext";
+import ConfirmAlert from "./confirmAlert";
 
 export default function Footer() {
+  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
+  const { setUser } = useUser();
+  const [showLogout, setShowLogout] = useState(false);
 
-   const navigation = useNavigation();
-   const insets = useSafeAreaInsets();
-   const { setUser } = useUser();
-   const [showLogout, setShowLogout] = useState(false);
+  const current = useMemo(() => {
+    const state = navigation.getState?.();
+    return state?.routes?.[state.index]?.name ?? "";
+  }, [navigation]);
+
+  const isHome = current === "Home";
+  const isProfile = current === "Profile";
 
   return (
-    <View pointerEvents='box-none' style={[styles.container, { bottom: insets.bottom + 12 }]}>
-      <View style={styles.navBar}>
-        <Pressable style={styles.navButton} onPress={() => setShowLogout(true)}>
-          <MaterialIcons name="logout" size={32} color="#222" />
-        </Pressable>
+    <View
+      pointerEvents="box-none"
+      style={{ bottom: insets.bottom + 12 }}
+      className="absolute left-2 right-2 z-50 items-center justify-center"
+    >
+      <View
+        className="w-full flex-row items-center justify-around rounded-2xl px-5 py-2.5 bg-[#F2EFE8] border border-black/10 shadow-lg"
+        style={{ elevation: 6 }}
+      >
+        {/* Logout */}
+        <NavBtn
+          onPress={() => setShowLogout(true)}
+          active={false}
+          icon="logout"
+          tone = "danger"
+        />
 
-        <Pressable style={styles.navButton} onPress={() => 
-          {
-          if (navigation.getState?.().routes?.[navigation.getState().index]?.name === 'Home') return;  
-          navigation.reset({
-            index: 0,
-            routes: [{name: 'Home'}],
-          })
-          }
-          }>
-          <MaterialIcons name="home" size={32} color="#222" />
-        </Pressable>
+        {/* Home */}
+        <NavBtn
+          onPress={() => {
+            if (isHome) return;
+            navigation.reset({ index: 0, routes: [{ name: "Home" }] });
+          }}
+          active={isHome}
+          icon="home"
+        />
 
-        <Pressable style={styles.navButton} onPress={() => navigation.navigate('Profile')}>
-          <MaterialIcons name="person" size={32} color="#222" />
-        </Pressable>
-        
+        {/* Profile */}
+        <NavBtn
+          onPress={() => navigation.navigate("Profile")}
+          active={isProfile}
+          icon="person"
+        />
       </View>
+
       <ConfirmAlert
         visible={showLogout}
         message="Are you sure you want to log out?"
         onCancel={() => setShowLogout(false)}
         onConfirm={() => {
           setUser(null);
-          navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+          navigation.reset({ index: 0, routes: [{ name: "Login" }] });
           setShowLogout(false);
         }}
       />
@@ -66,35 +70,26 @@ export default function Footer() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    bottom: 20,
-    left: 10,
-    right: 10,
-    zIndex: 1000,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  navBar: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    width: '100%',
-    justifyContent: 'space-around',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-  },
-  navButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,      // more height
-    paddingHorizontal: 20,    // more width
-    minWidth: 80
-  },
-});
+function NavBtn({ onPress, active, icon, tone = "default" }) {
+  const base = "#2B2B2B";     // default icon
+  const accent = "#B08D57";   // active brass
+  const danger = "#8C3A37";   // oxblood (logout)
+
+  const color = tone === "danger" ? danger : (active ? accent : base);
+  const ripple = tone === "danger" ? "rgba(140,58,55,0.15)" : "rgba(0,0,0,0.06)";
+
+  return (
+    <Pressable
+      onPress={onPress}
+      android_ripple={{ color: ripple, borderless: true }}
+      className="flex-1 items-center justify-center py-3"
+      hitSlop={8}
+    >
+      {/* show brass indicator only for non-danger active buttons */}
+      {active && tone !== "danger" ? (
+        <View className="absolute -top-1 h-[3px] w-8 rounded-full" style={{ backgroundColor: accent }} />
+      ) : null}
+      <MaterialIcons name={icon} size={28} color={color} />
+    </Pressable>
+  );
+}
