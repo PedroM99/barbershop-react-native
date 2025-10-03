@@ -29,6 +29,7 @@ export default function HomeScreen() {
   const firstName = user?.name? user.name.match(/^\S+/)[0] : '';
   const insets = useSafeAreaInsets();
   const [showLogout, setShowLogout] = useState(false);
+  const FOOTER_PAD = insets.bottom + 70 ; 
 
   const onBackPress = useCallback(() => {
     setShowLogout(true);
@@ -73,7 +74,7 @@ export default function HomeScreen() {
       columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: 20 }}
       showsVerticalScrollIndicator={false}
       data={Barbers}
-      contentContainerStyle={{ paddingBottom: 100, paddingHorizontal: 20, paddingTop: 12 }}
+      contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: FOOTER_PAD }}
       keyExtractor={(item) => item.id.toString()}
       renderItem={({ item }) => (
       <Barber

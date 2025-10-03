@@ -1,7 +1,8 @@
 // components/confirmAlert.js
 import React, { useEffect, useRef } from "react";
-import { Modal, View, Text, Pressable, Animated } from "react-native";
+import { Modal, View, Text, Pressable, Animated, Platform } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import * as NavigationBar from "expo-navigation-bar";
 
 export default function ConfirmAlert({
   visible,
@@ -20,6 +21,13 @@ export default function ConfirmAlert({
         Animated.timing(opacity, { toValue: 1, duration: 140, useNativeDriver: true }),
         Animated.spring(scale, { toValue: 1, useNativeDriver: true, stiffness: 180, damping: 18 }),
       ]).start();
+
+      if(Platform.OS === "android"){
+        NavigationBar.setBackgroundColorAsync("#0B0B0C");
+        NavigationBar.setButtonStyleAsync("light");
+        NavigationBar.setBehaviorAsync("overlay-swipe");
+      }
+
     } else {
       opacity.setValue(0);
       scale.setValue(0.96);
@@ -28,14 +36,22 @@ export default function ConfirmAlert({
 
   const brass = "#B08D57";
   const danger = "#8C3A37";
-  const confirmBg = destructive ? danger : brass;
+  const confirmBg = destructive ? brass : danger;
   const confirmIconColor = "#111"; // on brass
   const confirmIconColorDanger = "#fff"; // on danger
 
   const showCancel = type === "confirm";
 
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={onCancel}>
+    <Modal 
+    visible={visible} 
+    transparent 
+    animationType="none" 
+    statusBarTranslucent
+    presentationStyle="overFullScreen"
+    onRequestClose={onCancel}
+    
+    >
       {/* Backdrop */}
       <View className="flex-1 bg-black/60 items-center justify-center p-6">
         {/* Card */}
@@ -45,7 +61,7 @@ export default function ConfirmAlert({
         >
           {!!message && (
             <Text
-              style={{ fontFamily: "CormorantGaramond-SemiBold" }}
+              style={{ fontFamily: "Inter-Medium" }}
               className="text-[20px] text-[#EDEADE] mb-3"
             >
               {message}

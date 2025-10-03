@@ -1,7 +1,7 @@
-import 'react-native-reanimated'; // This *must* be at the top
+import 'react-native-reanimated'; // must be first
 import "./global.css";
 import React from 'react';
-import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 
@@ -21,10 +21,18 @@ import { Inter_400Regular, Inter_500Medium } from "@expo-google-fonts/inter";
 
 const Stack = createNativeStackNavigator();
 
-// optional: dark background for nav container to prevent white flashes
-const DarkNavTheme = {
-  ...DefaultTheme,
-  colors: { ...DefaultTheme.colors, background: '#000' },
+
+const APP_BG = '#0B0B0C';
+const MyTheme = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    background: APP_BG, 
+    card: APP_BG,       
+    border: 'transparent',
+    text: '#EDEADE',
+    primary: '#EDEADE',
+  },
 };
 
 export default function App() {
@@ -37,24 +45,30 @@ export default function App() {
   if (!loaded) return null;
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: APP_BG }}>
       <UserProvider>
-        <NavigationContainer theme={DarkNavTheme}>
-          <StatusBar style="light" />
+        <NavigationContainer theme={MyTheme}>
+          <StatusBar style="light" backgroundColor={APP_BG} />
           <Stack.Navigator
             initialRouteName="Login"
             screenOptions={{
-              headerStyle: { backgroundColor: '#101010' },      // matte charcoal
+              // Critical: never transparent during transitions
+              contentStyle: { backgroundColor: APP_BG },
+
+              headerStyle: { backgroundColor: APP_BG },
               headerTitleStyle: {
-                color: '#EDEADE',                               // ivory
-                fontFamily: 'CormorantGaramond-Bold',       
+                color: '#EDEADE',
+                fontFamily: 'CormorantGaramond-Bold',
                 fontSize: 18,
               },
-              headerTintColor: '#EDEADE',                       // back arrow & icons
+              headerTintColor: '#EDEADE',
               headerTitleAlign: 'center',
               headerShadowVisible: true,
-              headerShadowColor: 'rgba(255,255,255,0.06)',      // subtle hairline
-              contentStyle: { backgroundColor: 'transparent' }, // screens render their own bg
+              headerShadowColor: 'rgba(255,255,255,0.06)',
+
+              // Softer animation reduces any perceptible flicker
+              animation: 'slide_from_right',
             }}
           >
             <Stack.Screen

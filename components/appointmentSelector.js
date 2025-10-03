@@ -9,9 +9,10 @@
  */
 
 import React, { useMemo, useState } from "react";
-import { View, Text, Pressable, Alert, FlatList } from "react-native";
+import { View, Text, Pressable, FlatList } from "react-native";
 import { Calendar } from "react-native-calendars";
 import PropTypes from "prop-types";
+import ConfirmAlert from "./confirmAlert";
 
 export default function AppointmentSelector({
   mode = "book", // 'book' | 'my' | 'manage'
@@ -25,6 +26,7 @@ export default function AppointmentSelector({
 }) {
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
+  const [validationOpen, setValidationOpen] = useState(false);
 
   const isPast = (dateStr) => dateStr < new Date().toISOString().split("T")[0];
 
@@ -109,10 +111,11 @@ export default function AppointmentSelector({
 
   const confirmBooking = () => {
     if (!selectedDate || !selectedTime) {
-      Alert.alert("Select a date and time");
+      setValidationOpen(true);
       return;
     }
     onConfirm && onConfirm(selectedDate, selectedTime);
+    setSelectedTime(null);
   };
 
   // --- Renderers -------------------------------------------------------------
@@ -286,6 +289,13 @@ export default function AppointmentSelector({
       {mode === "book" && <BookSection />}
       {mode === "my" && <MySection />}
       {mode === "manage" && <ManageSection />}
+
+      <ConfirmAlert
+      visible={validationOpen}
+      type="info"
+      message="Select a time please"
+      onConfirm={() => setValidationOpen(false)}
+      />
     </View>
   );
 }

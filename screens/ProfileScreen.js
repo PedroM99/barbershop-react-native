@@ -21,6 +21,7 @@ import ConfirmAlert from "../components/confirmAlert";
 export default function ProfileScreen() {
   const { user, setUser } = useUser();
   const insets = useSafeAreaInsets();
+  const FOOTER_PAD = insets.bottom + 70;
 
   // --- Edit state ---
   const [isEditing, setIsEditing] = useState(false);
@@ -312,7 +313,7 @@ export default function ProfileScreen() {
         <SectionList
           sections={sections}
           keyExtractor={(item) => String(item.id)}
-          contentContainerStyle={{ paddingBottom: 100, paddingTop: insets.top }}
+          contentContainerStyle={{ paddingTop: insets.top, paddingBottom: FOOTER_PAD }}
           ListHeaderComponent={
             <View>
               {renderHeaderView()}

@@ -1,9 +1,11 @@
 // screens/BarberDetails.js
 /**
- * BarberDetails — Dark themed + NativeWind styling, logic unchanged.
+ * BarberDetails — Smooth height animation without useEffect.
+ * - No rotation support: we don't resync on dimension changes.
+ * - Collapsed height updates only when collapsed & not animating.
  */
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -12,6 +14,7 @@ import {
   ScrollView,
   Animated,
   ImageBackground,
+  Easing,
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -24,37 +27,58 @@ export default function BarberDetails() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
 
-  const COLLAPSED_HEIGHT = SCREEN_HEIGHT * 0.40;
-  const EXPANDED_HEIGHT  = SCREEN_HEIGHT * 0.86;
+  // Layout constants
+  const HEADER_PAD = Math.max(insets.top + 20, 72);
+  const EXPANDED_HEIGHT = SCREEN_HEIGHT * 0.86;
 
-  const COLLAPSED_BOTTOM = insets.bottom + 30; // ≈ footer height
-  const EXPANDED_BOTTOM  = insets.bottom + 15;
+  // Closed-state constraints
+  const MIN_COLLAPSED = 260;                  // don't get too tiny
+  const MAX_COLLAPSED = SCREEN_HEIGHT * 0.46; // don't cover too much of the photo
+  const SAFE_BOTTOM = (insets.bottom || 0) + 24;
 
-  // Animated values
-  const drawerHeight = useRef(new Animated.Value(COLLAPSED_HEIGHT)).current;
-  const drawerBottom = useRef(new Animated.Value(COLLAPSED_BOTTOM)).current;
+  // Drawer sits at real bottom
+  const BOTTOM_OFFSET = Math.max(insets.bottom, 8);
+
+  // Animation values
+  const drawerHeight = useRef(new Animated.Value(MIN_COLLAPSED)).current;
+  const drawerBottom = useRef(new Animated.Value(BOTTOM_OFFSET)).current;
+
+  // UI state
   const [expanded, setExpanded] = useState(false);
+  const [contentHeight, setContentHeight] = useState(0); // measured closed content height
+  const isAnimatingRef = useRef(false);
 
-  // keep drawer height in sync on rotate / expand state change
-  useEffect(() => {
-    drawerHeight.setValue(expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT);
-  }, [SCREEN_HEIGHT, expanded]);
+  // Helpers
+  const getClosedHeight = () => {
+    if (!contentHeight) return MIN_COLLAPSED;
+    const topPad = 12;
+    const target = contentHeight + topPad + SAFE_BOTTOM;
+    return Math.min(MAX_COLLAPSED, Math.max(MIN_COLLAPSED, target));
+  };
+
+  const animateHeight = (toValue) => {
+    isAnimatingRef.current = true;
+    Animated.timing(drawerHeight, {
+      toValue,
+      duration: 700,
+      easing: Easing.bezier(0.22, 1, 0.36, 1), // smooth ease-out
+      useNativeDriver: false, // animating height requires false
+    }).start(() => {
+      isAnimatingRef.current = false;
+    });
+    // bottom stays fixed
+    drawerBottom.setValue(BOTTOM_OFFSET);
+  };
 
   const toggleDrawer = () => {
     const next = !expanded;
-    Animated.parallel([
-      Animated.timing(drawerHeight, {
-        toValue: next ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT,
-        duration: 250,
-        useNativeDriver: false,
-      }),
-      Animated.timing(drawerBottom, {
-        toValue: next ? EXPANDED_BOTTOM : COLLAPSED_BOTTOM,
-        duration: 250,
-        useNativeDriver: false,
-      }),
-    ]).start();
+    const toHeight = next ? EXPANDED_HEIGHT : getClosedHeight();
+
+    // Update UI immediately (scrollEnabled, labels, etc.)
     setExpanded(next);
+
+    // Run the animation
+    animateHeight(toHeight);
   };
 
   return (
@@ -65,7 +89,11 @@ export default function BarberDetails() {
     >
       <View className="flex-1">
         {/* Hero image */}
-        <Image source={barber.image} className="w-full" style={{ height: SCREEN_HEIGHT * 0.40, resizeMode: "cover" }} />
+        <Image
+          source={barber.image}
+          className="w-full"
+          style={{ height: SCREEN_HEIGHT * 0.40, resizeMode: "cover" }}
+        />
 
         {/* Drawer */}
         <Animated.View
@@ -79,21 +107,40 @@ export default function BarberDetails() {
           className="bg-neutral-900/90 border-t border-white/10 rounded-t-2xl overflow-hidden"
         >
           <ScrollView
-            contentContainerStyle={{ paddingBottom: 40 }}
+            contentContainerStyle={{
+              paddingTop: expanded ? HEADER_PAD : 12,
+              paddingBottom: SAFE_BOTTOM,
+            }}
             className="px-5 pt-4"
             showsVerticalScrollIndicator={false}
+            scrollEnabled={expanded}
+            onContentSizeChange={(_, h) => {
+              // Only update measured height while COLLAPSED and not animating,
+              // so we never fight the open/close animation.
+              if (!expanded && !isAnimatingRef.current) {
+                setContentHeight(h);
+                const closed = (() => {
+                  const topPad = 12;
+                  const target = h + topPad + SAFE_BOTTOM;
+                  return Math.min(MAX_COLLAPSED, Math.max(MIN_COLLAPSED, target));
+                })();
+                drawerHeight.setValue(closed); // silent snap to the new collapsed height
+                drawerBottom.setValue(BOTTOM_OFFSET);
+              }
+            }}
           >
-            {/* Handle / toggle */}
+            {/* Toggle button */}
             <Pressable
               onPress={toggleDrawer}
+              hitSlop={8}
               className="self-center mb-4 items-center rounded-xl bg-neutral-900 px-6 py-3 border border-white/10"
               android_ripple={{ color: "rgba(255,255,255,0.08)", borderless: false }}
               accessibilityRole="button"
               accessibilityLabel={expanded ? "Close Portfolio" : "See Portfolio"}
             >
-            <Text className="text-[#EDEADE] font-semibold">
+              <Text className="text-[#EDEADE] font-semibold">
                 {expanded ? "Close Portfolio" : "See Portfolio"}
-            </Text>
+              </Text>
             </Pressable>
 
             {/* Name + meta */}
@@ -103,7 +150,9 @@ export default function BarberDetails() {
             >
               {barber.name}
             </Text>
-            <Text className="text-[13px] text-neutral-400 mt-0.5">{barber.specialty}</Text>
+            <Text className="text-[13px] text-neutral-400 mt-0.5">
+              {barber.specialty}
+            </Text>
 
             {/* Prices */}
             <View className="mt-3">
@@ -111,7 +160,8 @@ export default function BarberDetails() {
                 Haircut: <Text className="text-neutral-300">{barber.prices.haircut}</Text>
               </Text>
               <Text className="text-sm text-[#EDEADE] mt-1">
-                Haircut + Beard: <Text className="text-neutral-300">{barber.prices.haircutBeard}</Text>
+                Haircut + Beard:{" "}
+                <Text className="text-neutral-300">{barber.prices.haircutBeard}</Text>
               </Text>
             </View>
 
@@ -124,8 +174,9 @@ export default function BarberDetails() {
                 About
               </Text>
               <Text
-                // Inter for body if you want: style={{ fontFamily: "Inter-Regular" }}
+                style={{ fontFamily: "Inter-Regular" }}
                 className="text-[14px] leading-5 text-neutral-300"
+                numberOfLines={expanded ? undefined : 4}
               >
                 {barber.description}
               </Text>
@@ -133,40 +184,48 @@ export default function BarberDetails() {
 
             {/* CTA */}
             <Pressable
-              onPress={() => navigation.navigate("MakeAppointment", { barberId: barber.id })}
+              onPress={() =>
+                navigation.navigate("MakeAppointment", { barberId: barber.id })
+              }
               className="mt-5 items-center rounded-xl bg-[#B08D57] py-3"
               android_ripple={{ color: "rgba(0,0,0,0.12)", borderless: false }}
             >
               <Text className="font-bold text-black">Make Appointment</Text>
             </Pressable>
 
-            {/* Portfolio */}
-            {expanded && Array.isArray(barber.portfolio) && barber.portfolio.length > 0 && (
-              <View className="mt-6">
-                <Text
-                  style={{ fontFamily: "CormorantGaramond-SemiBold" }}
-                  className="text-[18px] text-[#EDEADE] mb-2"
-                >
-                  Portfolio
-                </Text>
+            {/* Portfolio (expanded only) */}
+            {expanded &&
+              Array.isArray(barber.portfolio) &&
+              barber.portfolio.length > 0 && (
+                <View className="mt-6">
+                  <Text
+                    style={{ fontFamily: "CormorantGaramond-SemiBold" }}
+                    className="text-[18px] text-[#EDEADE] mb-2"
+                  >
+                    Portfolio
+                  </Text>
 
-                <ScrollView
-                  horizontal={false}
-                  showsVerticalScrollIndicator={false}
-                  className="mt-1"
-                  contentContainerStyle={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" }}
-                >
-                  {barber.portfolio.map((img, idx) => (
-                    <Image
-                      key={idx}
-                      source={img}
-                      className="rounded-xl mb-2"
-                      style={{ width: "48%", aspectRatio: 1 }}
-                    />
-                  ))}
-                </ScrollView>
-              </View>
-            )}
+                  <ScrollView
+                    horizontal={false}
+                    showsVerticalScrollIndicator={false}
+                    className="mt-1"
+                    contentContainerStyle={{
+                      flexDirection: "row",
+                      flexWrap: "wrap",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    {barber.portfolio.map((img, idx) => (
+                      <Image
+                        key={idx}
+                        source={img}
+                        className="rounded-xl mb-2"
+                        style={{ width: "48%", aspectRatio: 1 }}
+                      />
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
           </ScrollView>
         </Animated.View>
       </View>

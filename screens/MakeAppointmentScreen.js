@@ -138,10 +138,6 @@ export default function MakeAppointmentScreen({ route }) {
    * - Otherwise book immediately
    */
   const handleConfirm = (date, time) => {
-    if (appointments.some((a) => a.date === date && a.time === time)) {
-      Alert.alert("Time unavailable", "That time is already booked.");
-      return;
-    }
 
     const existingUpcoming = getUpcomingForUser();
 

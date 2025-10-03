@@ -23,19 +23,19 @@ export default function Footer() {
   return (
     <View
       pointerEvents="box-none"
-      style={{ bottom: insets.bottom + 12 }}
+      style={{ bottom: insets.bottom + 8 }}
       className="absolute left-2 right-2 z-50 items-center justify-center"
     >
       <View
-        className="w-full flex-row items-center justify-around rounded-2xl px-5 py-2.5 bg-[#F2EFE8] border border-black/10 shadow-lg"
-        style={{ elevation: 6 }}
+        className="w-full flex-row items-center justify-around rounded-xl px-4 py-1.5 bg-[#F2EFE8] border border-black/10 shadow-md"
+        style={{ elevation: 5 }}
       >
-        {/* Logout */}
+        {/* Logout (danger tone) */}
         <NavBtn
           onPress={() => setShowLogout(true)}
           active={false}
           icon="logout"
-          tone = "danger"
+          tone="danger"
         />
 
         {/* Home */}
@@ -75,21 +75,24 @@ function NavBtn({ onPress, active, icon, tone = "default" }) {
   const accent = "#B08D57";   // active brass
   const danger = "#8C3A37";   // oxblood (logout)
 
-  const color = tone === "danger" ? danger : (active ? accent : base);
+  const color = tone === "danger" ? danger : active ? accent : base;
   const ripple = tone === "danger" ? "rgba(140,58,55,0.15)" : "rgba(0,0,0,0.06)";
 
   return (
     <Pressable
       onPress={onPress}
       android_ripple={{ color: ripple, borderless: true }}
-      className="flex-1 items-center justify-center py-3"
+      className="flex-1 items-center justify-center py-2"
       hitSlop={8}
     >
-      {/* show brass indicator only for non-danger active buttons */}
+      {/* Brass indicator for active state (non-danger) */}
       {active && tone !== "danger" ? (
-        <View className="absolute -top-1 h-[3px] w-8 rounded-full" style={{ backgroundColor: accent }} />
+        <View
+          className="absolute -top-0.5 h-[2px] w-6 rounded-full"
+          style={{ backgroundColor: accent }}
+        />
       ) : null}
-      <MaterialIcons name={icon} size={28} color={color} />
+      <MaterialIcons name={icon} size={24} color={color} />
     </Pressable>
   );
 }
