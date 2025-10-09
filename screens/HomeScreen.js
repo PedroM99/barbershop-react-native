@@ -11,7 +11,6 @@
 
 import React, {useCallback, useState} from 'react';
 import { View, Text, FlatList, BackHandler, ImageBackground } from 'react-native';
-import user_placeholder from '../assets/user_placeholder.png';
 import Barber from '../components/barber';
 import Barbers from '../data/Barbers'; 
 import AppLayout from '../components/appLayout';
@@ -80,7 +79,7 @@ export default function HomeScreen() {
       <Barber
         name={item.name}
         specialty={item.specialty}
-        image={user_placeholder}
+        image={item.image}
         onPress={() => navigation.navigate('BarberDetails', { barber: item })}
       />
       )}

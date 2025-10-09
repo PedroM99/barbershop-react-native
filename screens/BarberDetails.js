@@ -15,10 +15,13 @@ import {
   Animated,
   ImageBackground,
   Easing,
+  ActivityIndicator,
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useWindowDimensions } from "react-native";
+import AppLayout from '../components/appLayout';
+import { Asset } from "expo-asset";
 
 export default function BarberDetails() {
   const { height: SCREEN_HEIGHT } = useWindowDimensions();
@@ -26,18 +29,24 @@ export default function BarberDetails() {
   const { barber } = route.params;
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const [portfolioLoading, setPortfolioLoading] = useState(false);
+  const didPreloadPortfolio = useRef(false);
 
   // Layout constants
   const HEADER_PAD = Math.max(insets.top + 20, 72);
-  const EXPANDED_HEIGHT = SCREEN_HEIGHT * 0.86;
+  const FOOTER_H = 20;
 
   // Closed-state constraints
-  const MIN_COLLAPSED = 260;                  // don't get too tiny
-  const MAX_COLLAPSED = SCREEN_HEIGHT * 0.46; // don't cover too much of the photo
-  const SAFE_BOTTOM = (insets.bottom || 0) + 24;
+  const MIN_COLLAPSED = 280;                  // don't get too tiny
+  const MAX_COLLAPSED = SCREEN_HEIGHT * 0.48; // don't cover too much of the photo
+  const COLLAPSE_SAFE_BOTTOM = (insets.bottom || 0) + 24;
+  const FOOTER_VISUAL_H = 64; // visual height of your floating footer (tweak 56–72)
+  const SCROLL_SAFE_BOTTOM = (insets.bottom || 0) + FOOTER_VISUAL_H + 16;
 
   // Drawer sits at real bottom
-  const BOTTOM_OFFSET = Math.max(insets.bottom, 8);
+  const BOTTOM_OFFSET = Math.max(insets.bottom + FOOTER_H, 8);
+
+  const EXPANDED_HEIGHT = SCREEN_HEIGHT - BOTTOM_OFFSET - 12;
 
   // Animation values
   const drawerHeight = useRef(new Animated.Value(MIN_COLLAPSED)).current;
@@ -52,7 +61,7 @@ export default function BarberDetails() {
   const getClosedHeight = () => {
     if (!contentHeight) return MIN_COLLAPSED;
     const topPad = 12;
-    const target = contentHeight + topPad + SAFE_BOTTOM;
+    const target = contentHeight + topPad + COLLAPSE_SAFE_BOTTOM;
     return Math.min(MAX_COLLAPSED, Math.max(MIN_COLLAPSED, target));
   };
 
@@ -77,11 +86,26 @@ export default function BarberDetails() {
     // Update UI immediately (scrollEnabled, labels, etc.)
     setExpanded(next);
 
+       if (next &&
+          !didPreloadPortfolio.current &&
+          Array.isArray(barber.portfolio) &&
+          barber.portfolio.length > 0
+   ) {
+     setPortfolioLoading(true);
+     Asset.loadAsync(barber.portfolio)
+       .catch(() => {})
+       .finally(() => {
+         didPreloadPortfolio.current = true;
+         setPortfolioLoading(false);
+       });
+   }
+
     // Run the animation
     animateHeight(toHeight);
   };
 
   return (
+  <AppLayout>
     <ImageBackground
       source={require("../assets/background.png")}
       resizeMode="cover"
@@ -92,7 +116,7 @@ export default function BarberDetails() {
         <Image
           source={barber.image}
           className="w-full"
-          style={{ height: SCREEN_HEIGHT * 0.40, resizeMode: "cover" }}
+          style={{ height: SCREEN_HEIGHT * 0.6, resizeMode: "cover" }}
         />
 
         {/* Drawer */}
@@ -109,22 +133,20 @@ export default function BarberDetails() {
           <ScrollView
             contentContainerStyle={{
               paddingTop: expanded ? HEADER_PAD : 12,
-              paddingBottom: SAFE_BOTTOM,
+              paddingBottom: SCROLL_SAFE_BOTTOM,
             }}
             className="px-5 pt-4"
             showsVerticalScrollIndicator={false}
             scrollEnabled={expanded}
             onContentSizeChange={(_, h) => {
-              // Only update measured height while COLLAPSED and not animating,
-              // so we never fight the open/close animation.
               if (!expanded && !isAnimatingRef.current) {
                 setContentHeight(h);
                 const closed = (() => {
                   const topPad = 12;
-                  const target = h + topPad + SAFE_BOTTOM;
+                  const target = h + topPad + COLLAPSE_SAFE_BOTTOM;
                   return Math.min(MAX_COLLAPSED, Math.max(MIN_COLLAPSED, target));
                 })();
-                drawerHeight.setValue(closed); // silent snap to the new collapsed height
+                drawerHeight.setValue(closed);
                 drawerBottom.setValue(BOTTOM_OFFSET);
               }
             }}
@@ -160,8 +182,7 @@ export default function BarberDetails() {
                 Haircut: <Text className="text-neutral-300">{barber.prices.haircut}</Text>
               </Text>
               <Text className="text-sm text-[#EDEADE] mt-1">
-                Haircut + Beard:{" "}
-                <Text className="text-neutral-300">{barber.prices.haircutBeard}</Text>
+                Haircut + Beard: <Text className="text-neutral-300">{barber.prices.haircutBeard}</Text>
               </Text>
             </View>
 
@@ -176,7 +197,7 @@ export default function BarberDetails() {
               <Text
                 style={{ fontFamily: "Inter-Regular" }}
                 className="text-[14px] leading-5 text-neutral-300"
-                numberOfLines={expanded ? undefined : 4}
+                numberOfLines={expanded ? undefined : 3}
               >
                 {barber.description}
               </Text>
@@ -184,9 +205,7 @@ export default function BarberDetails() {
 
             {/* CTA */}
             <Pressable
-              onPress={() =>
-                navigation.navigate("MakeAppointment", { barberId: barber.id })
-              }
+              onPress={() => navigation.navigate("MakeAppointment", { barberId: barber.id })}
               className="mt-5 items-center rounded-xl bg-[#B08D57] py-3"
               android_ripple={{ color: "rgba(0,0,0,0.12)", borderless: false }}
             >
@@ -205,30 +224,37 @@ export default function BarberDetails() {
                     Portfolio
                   </Text>
 
-                  <ScrollView
-                    horizontal={false}
-                    showsVerticalScrollIndicator={false}
-                    className="mt-1"
-                    contentContainerStyle={{
-                      flexDirection: "row",
-                      flexWrap: "wrap",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    {barber.portfolio.map((img, idx) => (
-                      <Image
-                        key={idx}
-                        source={img}
-                        className="rounded-xl mb-2"
-                        style={{ width: "48%", aspectRatio: 1 }}
-                      />
-                    ))}
-                  </ScrollView>
+                  {portfolioLoading ? (
+                    <View className="mt-2 items-center justify-center" style={{ minHeight: 96 }}>
+                      <ActivityIndicator color="#B08D57" />
+                      <Text className="mt-2 text-neutral-400">Loading…</Text>
+                    </View>
+                  ) : (
+                    <ScrollView
+                      horizontal={false}
+                      showsVerticalScrollIndicator={false}
+                      className="mt-1"
+                      contentContainerStyle={{
+                        flexDirection: "row",
+                        flexWrap: "wrap",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      {barber.portfolio.map((img, idx) => (
+                        <Image
+                          key={idx}
+                          source={img}
+                          className="rounded-xl mb-2"
+                          style={{ width: "48%", aspectRatio: 1 }}
+                        />
+                      ))}
+                    </ScrollView>
+                  )}
                 </View>
               )}
           </ScrollView>
         </Animated.View>
       </View>
     </ImageBackground>
-  );
-}
+  </AppLayout>
+)};

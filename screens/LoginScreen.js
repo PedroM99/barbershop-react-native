@@ -13,6 +13,8 @@ import {
   Keyboard,
   InteractionManager,
   ImageBackground,
+  KeyboardAvoidingView,
+  Platform 
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import users from "../data/Users";
@@ -55,6 +57,7 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <View className="flex-1 bg-black">
+      
       {/* Background image */}
       <ImageBackground
         source={require("../assets/Barbershop Interior.png")}
@@ -74,7 +77,7 @@ export default function LoginScreen({ navigation }) {
         source={require("../assets/BarbershopLogo.png")}
         resizeMode="contain"
         style={{
-          width: 240,            // <<< hard cap the size (try 72 / 88 / 96 / 112)
+          width: 240,            
           height: 240,
         }}
       />
@@ -85,7 +88,11 @@ export default function LoginScreen({ navigation }) {
           locations={[0, 0.35, 0.65, 1]}
           style={{ ...StyleSheet.absoluteFillObject }}
         />
-
+        <KeyboardAvoidingView
+          behavior={Platform.select({ ios: "padding", android: "height" })}
+          keyboardVerticalOffset={insets.top} // tweak if needed (e.g., +12)
+          style={{ flex: 1 }}
+        >
         {/* Content: push card to the lower area */}
         <View 
         style={{ paddingBottom: insets.bottom + 30 }}
@@ -145,8 +152,9 @@ export default function LoginScreen({ navigation }) {
             </View>
           </View>
         </View>
+        </KeyboardAvoidingView>
       </ImageBackground>
-    </View>
+  </View>
   );
 }
 

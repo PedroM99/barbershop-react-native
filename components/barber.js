@@ -23,7 +23,7 @@ export default function Barber({ name, specialty, image, onPress }) {
       <Image
         source={image}
         resizeMode="cover"
-        style={{ width: imageSize, height: imageSize }}
+        style={{ width: imageSize, height: imageSize, aspectRatio: 4/5 }}
         className="self-center mb-2 border border-white/10 bg-neutral-800"
         accessible
         accessibilityLabel={`${name}'s photo`}

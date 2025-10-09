@@ -94,7 +94,7 @@ export default function App() {
             <Stack.Screen
               name="BarberDetails"
               component={BarberDetails}
-              options={{ headerShown: true, title: 'Barber Details' }}
+              options={{ headerShown: false, title: 'Barber Details' }}
             />
             <Stack.Screen
               name="MakeAppointment"
