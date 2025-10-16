@@ -11,6 +11,7 @@ import LoginScreen from './screens/LoginScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import RegisterScreen from './screens/RegisterScreen';
 import MakeAppointmentScreen from './screens/MakeAppointmentScreen';
+import BarberDashboard from './screens/BarberDashboard';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { UserProvider } from './context/UserContext';
@@ -84,6 +85,11 @@ export default function App() {
             <Stack.Screen
               name="Home"
               component={HomeScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="BarberDashboard"
+              component={BarberDashboard}
               options={{ headerShown: false }}
             />
             <Stack.Screen

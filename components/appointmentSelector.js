@@ -43,7 +43,7 @@ const BookSection = memo(function BookSection({
       <SuccessButton
         label="Confirm Appointment"
         onPress={confirmBooking}
-        successToken={successToken}   // ⬅️ drives animation
+        successToken={successToken}
         durationMs={900}
       />
     </View>
@@ -56,7 +56,7 @@ export default function AppointmentSelector({
   barberId,
   userId,
   onConfirm,
-  successToken, // ⬅️ new prop from screen
+  successToken, 
 }) {
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);

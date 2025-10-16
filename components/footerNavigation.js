@@ -9,15 +9,22 @@ import ConfirmAlert from "./confirmAlert";
 export default function Footer() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const { setUser } = useUser();
+  const { user, setUser } = useUser(); // ← also read user
+
   const [showLogout, setShowLogout] = useState(false);
+
+  // Which screen should "Home" mean for this user?
+  const homeRouteName = useMemo(
+    () => (user?.role === "barber" ? "BarberDashboard" : "Home"),
+    [user?.role]
+  );
 
   const current = useMemo(() => {
     const state = navigation.getState?.();
     return state?.routes?.[state.index]?.name ?? "";
   }, [navigation]);
 
-  const isHome = current === "Home";
+  const isHomeActive = current === homeRouteName;
   const isProfile = current === "Profile";
 
   return (
@@ -38,13 +45,13 @@ export default function Footer() {
           tone="danger"
         />
 
-        {/* Home */}
+        {/* Role-aware Home */}
         <NavBtn
           onPress={() => {
-            if (isHome) return;
-            navigation.reset({ index: 0, routes: [{ name: "Home" }] });
+            if (isHomeActive) return;
+            navigation.reset({ index: 0, routes: [{ name: homeRouteName }] });
           }}
-          active={isHome}
+          active={isHomeActive}
           icon="home"
         />
 
@@ -71,12 +78,13 @@ export default function Footer() {
 }
 
 function NavBtn({ onPress, active, icon, tone = "default" }) {
-  const base = "#2B2B2B";     // default icon
-  const accent = "#B08D57";   // active brass
-  const danger = "#8C3A37";   // oxblood (logout)
+  const base = "#2B2B2B";
+  const accent = "#B08D57";
+  const danger = "#8C3A37";
 
   const color = tone === "danger" ? danger : active ? accent : base;
-  const ripple = tone === "danger" ? "rgba(140,58,55,0.15)" : "rgba(0,0,0,0.06)";
+  const ripple =
+    tone === "danger" ? "rgba(140,58,55,0.15)" : "rgba(0,0,0,0.06)";
 
   return (
     <Pressable
@@ -85,11 +93,10 @@ function NavBtn({ onPress, active, icon, tone = "default" }) {
       className="flex-1 items-center justify-center py-2"
       hitSlop={8}
     >
-      {/* Brass indicator for active state (non-danger) */}
       {active && tone !== "danger" ? (
         <View
           className="absolute -top-0.5 h-[2px] w-6 rounded-full"
-          style={{ backgroundColor: accent }}
+          style={{ backgroundColor: "#B08D57" }}
         />
       ) : null}
       <MaterialIcons name={icon} size={24} color={color} />

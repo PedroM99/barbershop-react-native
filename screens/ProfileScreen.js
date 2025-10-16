@@ -196,7 +196,7 @@ export default function ProfileScreen() {
   const renderHeaderView = () => {
     if (!isEditing) {
       return (
-        <View className="items-center pt-6 pb-3 w-full border-b border-white/10 bg-neutral-900/60">
+        <View className="px-5 py-2 bg-neutral-900/60 border-b border-white/10 items-center">
           <Image
             source={user.image || require("../assets/user_placeholder.png")}
             style={{

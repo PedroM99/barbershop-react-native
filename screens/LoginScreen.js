@@ -29,30 +29,50 @@ export default function LoginScreen({ navigation }) {
 
   const normalizePhone = (p) => p.replace(/\s+/g, "").replace(/[-()]/g, "");
   const insets = useSafeAreaInsets();
+  const DEV_BYPASS_AUTH = __DEV__ && true;
 
   const handleSubmit = () => {
-    setError("");
-    if (!identifier /* || !password */) {
-      setError("Please enter your username/phone and password.");
-      return;
-    }
+  setError("");
 
-    const normalizedPhoneNumber = normalizePhone(identifier);
-    const lowerName = identifier.toLowerCase().trim();
+  // In dev: allow empty password to speed up testing
+  const requirePassword = !DEV_BYPASS_AUTH;
 
-    const user = users.find((u) => {
-      const phoneMatch = u.phone && normalizePhone(u.phone) === normalizedPhoneNumber;
-      const nameMatch = u.name && u.name.toLowerCase() === lowerName;
-      return phoneMatch || nameMatch;
-    });
+  if (!identifier || (requirePassword && !password)) {
+    setError(requirePassword
+      ? "Please enter your name/phone AND password."
+      : "Please enter your name/phone.");
+    return;
+  }
 
-    Keyboard.dismiss();
-    InteractionManager.runAfterInteractions(() => {
-      setUser(user);
-      setIdentifier("");
-      setPassword("");
-      navigation.reset({ index: 0, routes: [{ name: "Home" }] });
-    });
+  const normalizedPhoneNumber = normalizePhone(identifier);
+  const lowerName = identifier.toLowerCase().trim();
+
+  const found = users.find((u) => {
+    const phoneMatch = u.phone && normalizePhone(u.phone) === normalizedPhoneNumber;
+    const nameMatch = u.name && u.name.toLowerCase() === lowerName;
+    return phoneMatch || nameMatch;
+  });
+
+  if (!found) {
+    setError("Account not found. Check your name/phone.");
+    return;
+  }
+
+  // Only check password if not bypassing
+  if (!DEV_BYPASS_AUTH && found.password !== password) {
+    setError("Incorrect password.");
+    return;
+  }
+
+  Keyboard.dismiss();
+  InteractionManager.runAfterInteractions(() => {
+    setUser(found);
+    setIdentifier("");
+    setPassword("");
+
+    const targetRoute = found.role === "barber" ? "BarberDashboard" : "Home";
+    navigation.reset({ index: 0, routes: [{ name: targetRoute }] });
+  });
   };
 
   return (
