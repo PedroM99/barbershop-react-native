@@ -99,7 +99,8 @@ const barbers = [
     appointments: [
       { id: '501', date: '2025-08-28', time: '13:00', customerId: 'user13', status: 'scheduled', barberId: '5' },
       { id: '502', date: '2025-09-03', time: '10:00', customerId: 'user14', status: 'scheduled', barberId: '5' },
-      { id: '503', date: '2025-22-20', time: '10:00', customerId: 'user3', status: 'scheduled', barberId: '5' },
+      { id: '503', date: '2025-10-10', time: '10:00', customerId: 'user3', status: 'scheduled', barberId: '5' },
+      { id: '504', date: '2025-12-24', time: '10:00', customerId: 'user1', status: 'scheduled', barberId: '5' },
     ],
   },
   {

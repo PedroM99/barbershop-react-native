@@ -21,6 +21,7 @@ import { useUser } from "../context/UserContext";
 import Barbers from "../data/Barbers";
 import users from "../data/Users";
 import { ensureDevAppointmentsForDay } from "../dev/seedAppointments";
+import AppointmentRowCard from "../components/appointmentRowCard";
 
 /* ------------------------------------------------------------------ */
 /* Constants + helpers                                                */
@@ -49,7 +50,7 @@ const TEXT_BY_STATUS = {
 
 function formatLongDate(d) {
   try {
-    return new Intl.DateTimeFormat(undefined, {
+    return new Intl.DateTimeFormat("en-US", {
       weekday: "long",
       day: "2-digit",
       month: "long",
@@ -216,6 +217,9 @@ export default function BarberDashboard() {
   const firstName = user?.name ? user.name.match(/^\S+/)[0] : "";
 
   const FOOTER_PAD = insets.bottom + 70; // space to clear your floating footer nav
+  
+
+
 
   const onBackPress = useCallback(() => {
     setShowLogout(true);
@@ -242,8 +246,8 @@ export default function BarberDashboard() {
         barberId: barber.id,           // Andre's id when you're testing that profile
         date: toTodayString(new Date()),
         start: "09:00",
-        intervalMins: 30,
-        slots: 10,                     // <- tweak freely
+        intervalMins: 60,
+        slots: 12,                     // <- tweak freely
         // customerPool: ["user2","user7"], // optional: restrict pool
         mirrorToCustomer: true,
       });
@@ -328,106 +332,6 @@ export default function BarberDashboard() {
 
   /* --------------------------- Inner Components -------------------------- */
 
-  const StatusChip = ({ status }) => {
-    let label = String(status || "").toUpperCase();
-    if (status === STATUS.BOOKED) label = "BOOKED";
-    if (status === STATUS.COMPLETED) label = "COMPLETED";
-    if (status === STATUS.CANCELED) label = "CANCELED";
-    if (status === STATUS.NO_SHOW) label = "NO-SHOW";
-
-    const borderClass = BORDER_BY_STATUS[status] ?? "border-white/10";
-    const textClass = TEXT_BY_STATUS[status] ?? "text-neutral-300";
-
-    return (
-      <View className={`px-2 py-1 rounded-lg bg-transparent border ${borderClass}`}>
-        <Text className={`text-[11px] ${textClass}`}>{label}</Text>
-      </View>
-    );
-  };
-
-  const QuickActions = ({ appt }) => {
-    const isTerminal =
-      appt.status === STATUS.COMPLETED ||
-      appt.status === STATUS.CANCELED ||
-      appt.status === STATUS.NO_SHOW;
-
-    if (!isTerminal) {
-      return (
-        <View className="flex-row gap-2 mt-3">
-          <Pressable
-            onPress={() => applyStatus(appt, STATUS.COMPLETED)}
-            className="flex-1 h-10 rounded-xl items-center justify-center bg-emerald-600/90"
-            android_ripple={{ color: "rgba(255,255,255,0.12)" }}
-          >
-            <Text className="text-white">Done</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() => setConfirmItem({ appt, action: "no_show" })}
-            className="flex-1 h-10 rounded-xl items-center justify-center bg-amber-600/90"
-            android_ripple={{ color: "rgba(255,255,255,0.12)" }}
-          >
-            <Text className="text-white">No-show</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() => setConfirmItem({ appt, action: "cancel" })}
-            className="flex-1 h-10 rounded-xl items-center justify-center bg-rose-600/90"
-            android_ripple={{ color: "rgba(255,255,255,0.12)" }}
-          >
-            <Text className="text-white">Cancel</Text>
-          </Pressable>
-        </View>
-      );
-    }
-    return null;
-  };
-
-const Row = React.memo(({ appt }) => {
-  const isExpanded = expandedRowId === appt.id;
-  const onToggle = () => setExpandedRowId(isExpanded ? null : appt.id);
-
-  return (
-    // Outer card (clips ripple + corners)
-    <View className="mb-3 rounded-2xl bg-neutral-900/60 border border-white/10 overflow-hidden" style={{ elevation: 2 }}>
-      {/* Header is the only pressable area → ripple stays in the header */}
-      <Pressable
-        onPress={onToggle}
-        android_ripple={{ color: "rgba(255,255,255,0.06)", borderless: false }}
-        className="p-4"
-      >
-        <View className="flex-row items-center justify-between">
-          <View className="flex-1 pr-3">
-            <Text className="text-[#EDEADE] text-base" style={{ fontFamily: "Inter-Medium" }}>
-              {appt.time} • {appt.customer?.name ?? "Customer"}
-            </Text>
-          </View>
-          <StatusChip status={appt.status} />
-        </View>
-      </Pressable>
-
-      {/* Let the list animate height; content fades in/out for polish */}
-      {isExpanded && (
-        <ReAnimated.View
-          entering={FadeIn.duration(140)}
-          exiting={FadeOut.duration(120)}
-          className="px-4 pb-4"
-        >
-          <View className="border-t border-white/10 pt-3">
-            {!!appt.customer?.phone && (
-              <Text className="text-neutral-300 text-[13px] mt-1">
-                Phone: {appt.customer.phone}
-              </Text>
-            )}
-            <QuickActions appt={appt} />
-          </View>
-        </ReAnimated.View>
-      )}
-    </View>
-  );
-});
-
-
 const AddAppointmentCard = () => (
 <View
       className="mb-3 rounded-2xl"
@@ -441,7 +345,7 @@ const AddAppointmentCard = () => (
           })
         }
         android_ripple={{ color: "rgba(0, 0, 0, 0.12)", borderless: false }}
-        className="rounded-2xl overflow-hidden p-4 bg-[#B08D57] border border-white/10 flex-row items-center justify-center"
+        className="rounded-xs overflow-hidden p-4 bg-[#B08D57] border border-white/10 flex-row items-center justify-center"
         style={{ borderRadius: 16 }}
       >
         <MaterialIcons name="add" size={32} color="#000" />
@@ -479,6 +383,7 @@ const AddAppointmentCard = () => (
           onViewAll={() =>
             navigation.navigate("BarberAppointments", {
               barberId: user?.barberId,
+              view: "all",
             })
           }
         />
@@ -498,19 +403,42 @@ const AddAppointmentCard = () => (
             <ReAnimated.FlatList
               data={todays}
               keyExtractor={(item) => String(item.id)}
-              renderItem={({ item }) => <Row appt={item} />}
+              renderItem={({ item }) => (
+              <AppointmentRowCard
+              appt={item}
+              isExpanded={expandedRowId === item.id}
+              onToggle={() =>
+                setExpandedRowId(expandedRowId === item.id ? null : item.id)
+              }
+              STATUS={STATUS}
+              applyStatus={applyStatus}
+              setConfirmItem={setConfirmItem}
+              />
+              )}
               showsVerticalScrollIndicator={false}
               extraData={expandedRowId}
               itemLayoutAnimation={LinearTransition.duration(180)}
               contentContainerStyle={{
                 paddingHorizontal: 20,
                 paddingTop: 12,
-                paddingBottom: insets.bottom + 70 + 72,
+                paddingBottom: FOOTER_PAD + 72 ,
               }}
               onRefresh={() => setRefreshKey((k) => k + 1)}
               refreshing={false}
             />
           )}
+        </View>
+        <View
+          pointerEvents="none"
+          style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: FOOTER_PAD + 72,
+          }}
+        >
+          <View className="flex-1 bg-neutral-900 border-t border-white/10" />
         </View>
 
         {/* Fixed Add button above the footer */}

@@ -35,7 +35,7 @@ export function ensureDevAppointmentsForDay({
   barberId,
   date = toTodayString(),
   start = "09:00",
-  intervalMins = 30,
+  intervalMins = 60,
   slots = 8,
   customerPool,                  // optional override
   mirrorToCustomer = true,

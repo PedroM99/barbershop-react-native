@@ -12,6 +12,7 @@ import ProfileScreen from './screens/ProfileScreen';
 import RegisterScreen from './screens/RegisterScreen';
 import MakeAppointmentScreen from './screens/MakeAppointmentScreen';
 import BarberDashboard from './screens/BarberDashboard';
+import BarberAppointments from "./screens/BarberAppointments";
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { UserProvider } from './context/UserContext';
@@ -90,6 +91,11 @@ export default function App() {
             <Stack.Screen
               name="BarberDashboard"
               component={BarberDashboard}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="BarberAppointments"
+              component={BarberAppointments}
               options={{ headerShown: false }}
             />
             <Stack.Screen
