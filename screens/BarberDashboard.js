@@ -247,7 +247,7 @@ export default function BarberDashboard() {
         date: toTodayString(new Date()),
         start: "09:00",
         intervalMins: 60,
-        slots: 12,                     // <- tweak freely
+        slots: 10,                     // <- tweak freely
         // customerPool: ["user2","user7"], // optional: restrict pool
         mirrorToCustomer: true,
       });
@@ -281,24 +281,45 @@ export default function BarberDashboard() {
     return { total, completed, canceled, noShow, upcoming };
   }, [todays]);
 
-  const nextUp = useMemo(() => {
-    if (!barber?.appointments) return null;
-    const now = new Date();
-     candidates = barber.appointments
-      .filter((a) => a.status === STATUS.BOOKED)
-      .map((a) => ({ ...a, when: toDateTime(a) }))
-      .filter((a) => a.when >= now)
-      .sort((a, b) => a.when - b.when);
+const nextUp = useMemo(() => {
+  if (!barber?.appointments) return null;
 
-    if (!candidates.length) return null;
+  const now = new Date();
+  const graceMs = 10 * 60 * 1000;             // 10-min grace so a :00 appt doesn't vanish at :01
+  const cutoff = new Date(now.getTime() - graceMs);
 
-    const appt = candidates[0];
+  const enrich = (a) => ({ ...a, when: toDateTime(a) });
+
+  // 1) Prefer today's upcoming scheduled
+  const todaysUpcoming = barber.appointments
+    .filter(a => a.status === STATUS.BOOKED && a.date === todayStr)
+    .map(enrich)
+    .filter(a => a.when >= cutoff)
+    .sort((a, b) => a.when - b.when);
+
+  if (todaysUpcoming.length) {
+    const appt = todaysUpcoming[0];
     return {
       ...appt,
-      customer:
-        users.find((u) => String(u.id) === String(appt.customerId)) || null,
+      customer: users.find(u => String(u.id) === String(appt.customerId)) || null,
     };
-  }, [barber?.appointments, refreshKey]);
+  }
+
+  // 2) Otherwise, earliest future scheduled (strictly after today)
+  const futureUpcoming = barber.appointments
+    .filter(a => a.status === STATUS.BOOKED && a.date > todayStr) // YYYY-MM-DD strings compare lexicographically
+    .map(enrich)
+    .sort((a, b) => a.when - b.when);
+
+  if (!futureUpcoming.length) return null;
+
+  const appt = futureUpcoming[0];
+  return {
+    ...appt,
+    customer: users.find(u => String(u.id) === String(appt.customerId)) || null,
+  };
+}, [barber?.appointments, refreshKey, todayStr]);
+
 
   /* ------------------------------ Mutators ------------------------------ */
 
@@ -345,13 +366,16 @@ const AddAppointmentCard = () => (
           })
         }
         android_ripple={{ color: "rgba(0, 0, 0, 0.12)", borderless: false }}
-        className="rounded-xs overflow-hidden p-4 bg-[#B08D57] border border-white/10 flex-row items-center justify-center"
+        className="rounded-xs overflow-hidden p-1.5 bg-[#B08D57] border border-white/10 flex-row items-center justify-center"
         style={{ borderRadius: 16 }}
       >
         <MaterialIcons name="add" size={32} color="#000" />
       </Pressable>
     </View>
   );
+
+
+  const nextIdToday = nextUp?.date === todayStr ? String(nextUp.id) : null;
 
   /* -------------------------------- Render -------------------------------- */
 
@@ -413,6 +437,7 @@ const AddAppointmentCard = () => (
               STATUS={STATUS}
               applyStatus={applyStatus}
               setConfirmItem={setConfirmItem}
+              isNextUpcomingToday={nextIdToday === String(item.id)} 
               />
               )}
               showsVerticalScrollIndicator={false}
@@ -435,7 +460,7 @@ const AddAppointmentCard = () => (
           left: 0,
           right: 0,
           bottom: 0,
-          height: FOOTER_PAD + 72,
+          height: FOOTER_PAD + 50,
           }}
         >
           <View className="flex-1 bg-neutral-900 border-t border-white/10" />

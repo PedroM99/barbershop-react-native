@@ -85,6 +85,7 @@ function AppointmentRowCardBase({
   STATUS,
   applyStatus,
   setConfirmItem,
+  isNextUpcomingToday,
 }) {
   const [internalExpanded, setInternalExpanded] = useState(false);
 
@@ -101,7 +102,8 @@ function AppointmentRowCardBase({
 
   return (
     <View
-      className="mb-3 rounded-2xl bg-neutral-900/60 border border-white/10 overflow-hidden"
+      className={`mb-3 rounded-2xl bg-neutral-900/60 border overflow-hidden ${
+      isNextUpcomingToday ? 'border-[#B08D57]' : 'border-white/10'}`}
       style={{ elevation: 2 }}
     >
       {/* Header is the only pressable area → ripple stays in the header */}

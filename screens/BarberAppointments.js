@@ -1,7 +1,7 @@
 // screens/BarberAppointments.js
 import ReAnimated, { LinearTransition, FadeIn, FadeOut } from "react-native-reanimated";
 import React, { useMemo, useEffect, useState, useCallback } from "react";
-import { View, Text, ImageBackground, Pressable, Modal, SectionList  } from "react-native";
+import { View, Text, ImageBackground, Pressable, Modal } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRoute } from "@react-navigation/native";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -12,7 +12,6 @@ import AppointmentRowCard from "../components/appointmentRowCard";
 import { useUser } from "../context/UserContext";
 import Barbers from "../data/Barbers";
 import users from "../data/Users";
-import { ensureDevAppointmentsForDay } from "../dev/seedAppointments";
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                            */
@@ -23,6 +22,17 @@ const STATUS = {
   COMPLETED: "completed",
   CANCELED: "canceled",
   NO_SHOW: "no_show",
+};
+
+// Display order for the counters
+const STATUS_ORDER = ["scheduled", "completed", "canceled", "no_show"];
+
+// Text/border colors for each status (kept subtle to fit your aesthetic)
+const COLOR_BY_STATUS = {
+  scheduled: "#38BDF8", // sky-400
+  completed: "#22C55E", // green-500
+  canceled:  "#EF4444", // red-500
+  no_show:   "#F59E0B", // amber-500
 };
 
 function ymd(date) {
@@ -147,7 +157,7 @@ function DaySelector({ value, onChange }) {
         <Pressable
           onPress={goPrev}
           android_ripple={{ color: "rgba(255,255,255,0.08)", borderless: true }}
-          className="p-2 rounded-xl bg-neutral-800/70 border border-white/10"
+          className={`p-2 rounded-xl bg-neutral-800/70 border border-white/10 ${isAll ? 'opacity-0' : ''}`}
           disabled={isAll}
         >
           <MaterialIcons name="chevron-left" size={22} color="#EDEADE" />
@@ -166,7 +176,7 @@ function DaySelector({ value, onChange }) {
         <Pressable
           onPress={goNext}
           android_ripple={{ color: "rgba(255,255,255,0.08)", borderless: true }}
-          className="p-2 rounded-xl bg-neutral-800/70 border border-white/10"
+          className={`p-2 rounded-xl bg-neutral-800/70 border border-white/10 ${isAll ? 'opacity-0' : ''}`}
           disabled={isAll}
         >
           <MaterialIcons name="chevron-right" size={22} color="#EDEADE" style={{ fontFamily: "MaterialIcons", fontWeight: "normal" }} />
@@ -286,8 +296,19 @@ function DaySelector({ value, onChange }) {
   );
 }
 
-
 function DayGroup({ group, expanded, onToggle, renderRow }) {
+  // Build per-status counts for this group/day
+  const counts = useMemo(() => {
+    const tally = { scheduled: 0, completed: 0, canceled: 0, no_show: 0 };
+    for (const item of group.data) {
+      const s = (item.status || "").toLowerCase();
+      if (s in tally) tally[s] += 1;
+    }
+    return tally;
+  }, [group.data]);
+
+  const hasAny = Object.values(counts).some((n) => n > 0);
+
   return (
     <View className="px-5">
       {/* Header row */}
@@ -299,9 +320,33 @@ function DayGroup({ group, expanded, onToggle, renderRow }) {
         <Text className="text-[#EDEADE]" style={{ fontFamily: "Inter-Medium" }}>
           {group.title}
         </Text>
-        <View className="flex-row items-center gap-2">
-          {/* count */}
-          <Text className="text-neutral-400 text-[12px]">{group.data.length}</Text>
+
+        <View className="flex-row items-center">
+          {/* Counters (one chip per status with > 0) */}
+          {hasAny && (
+            <View className="flex-row items-center mr-1">
+              {STATUS_ORDER.map((key) => {
+                const n = counts[key];
+                if (!n) return null;
+                const color = COLOR_BY_STATUS[key];
+                return (
+                  <View
+                    key={key}
+                    className="px-2 py-[2px] mr-1 rounded-full border bg-neutral-800/40"
+                    style={{ borderColor: color }}
+                  >
+                    <Text
+                      className="text-[12px]"
+                      style={{ color, fontFamily: "Inter-Medium" }}
+                    >
+                      {n}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+
           <MaterialIcons name={expanded ? "expand-less" : "expand-more"} size={20} color="#EDEADE" />
         </View>
       </Pressable>
@@ -337,32 +382,15 @@ export default function BarberAppointments() {
   const [day, setDay] = useState(() => (wantAll ? null : new Date()));
   const [openDays, setOpenDays] = useState(() => new Set());
 
-
   useEffect(() => {
     if (day == null) setOpenDays(new Set());
   }, [day]);
 
   useEffect(() => {
-   if (route?.params?.view === "all") {
-     setDay(null);
-   }
-  }, [route?.params?.view]);
-
-  // Seed today for dev, same style as dashboard
-  useEffect(() => {
-    if (__DEV__ && barberId) {
-      const todayStr = ymd(new Date());
-      ensureDevAppointmentsForDay({
-        barberId,
-        date: todayStr,
-        start: "09:00",
-        intervalMins: 30,
-        slots: 10,
-        mirrorToCustomer: true,
-      });
-      setRefreshKey((k) => k + 1);
+    if (route?.params?.view === "all") {
+      setDay(null);
     }
-  }, [barberId]);
+  }, [route?.params?.view]);
 
   // Logged-in barber
   const barber = useMemo(() => {
@@ -383,28 +411,26 @@ export default function BarberAppointments() {
       .sort((a, b) => a.time.localeCompare(b.time));
   }, [barber?.appointments, day, refreshKey]);
 
-
-    const allGroups = React.useMemo(() => {
-      if (!barber?.appointments || day != null) return [];
-      const byDate = new Map();
-      for (const a of barber.appointments) {
-        if (!byDate.has(a.date)) byDate.set(a.date, []);
-        byDate.get(a.date).push({
-          ...a,
-          customer: users.find((u) => String(u.id) === String(a.customerId)) || null,
-        });
-      }
-      const keys = Array.from(byDate.keys()).sort((a, b) => b.localeCompare(a));
-      return keys.map((dateKey) => ({
-        title: formatDateLabel(dateKey),
-        key: `date-${dateKey}`,
-        data: byDate
-          .get(dateKey)
-          .slice()
-          .sort((a, b) => (a.date === b.date ? b.time.localeCompare(a.time) : b.date.localeCompare(a.date))),
+  const allGroups = React.useMemo(() => {
+    if (!barber?.appointments || day != null) return [];
+    const byDate = new Map();
+    for (const a of barber.appointments) {
+      if (!byDate.has(a.date)) byDate.set(a.date, []);
+      byDate.get(a.date).push({
+        ...a,
+        customer: users.find((u) => String(u.id) === String(a.customerId)) || null,
+      });
+    }
+    const keys = Array.from(byDate.keys()).sort((a, b) => b.localeCompare(a));
+    return keys.map((dateKey) => ({
+      title: formatDateLabel(dateKey),
+      key: `date-${dateKey}`,
+      data: byDate
+        .get(dateKey)
+        .slice()
+        .sort((a, b) => (a.date === b.date ? b.time.localeCompare(a.time) : b.date.localeCompare(a.date))),
     }));
-    }, [barber?.appointments, day, refreshKey]);
-
+  }, [barber?.appointments, day, refreshKey]);
 
   /* ------------------------------ Mutators ------------------------------ */
 
@@ -463,51 +489,51 @@ export default function BarberAppointments() {
 
         {/* Body: list for the selected day */}
         <View className="flex-1">
-           {day == null ? (
+          {day == null ? (
             // ALL mode
             allGroups.length === 0 ? (
-            <View className="flex-1 items-center justify-center px-5">
-              <Text className="text-neutral-400">No appointments to show.</Text>
-            </View>
-          ) : ( <ReAnimated.FlatList
-       data={allGroups}
-       keyExtractor={(g) => g.key}
-       renderItem={({ item: group }) => {
-         const expanded = openDays.has(group.key);
-         const toggle = () =>
-           setOpenDays((prev) => {
-             const next = new Set(prev);
-             if (next.has(group.key)) next.delete(group.key);
-             else next.add(group.key);
-             return next;
-           });
-         const renderRow = (item) => (
-           <AppointmentRowCard
-             appt={item}
-             isExpanded={String(expandedRowId) === String(item.id)}
-             onToggle={() =>
-               setExpandedRowId(
-                 String(expandedRowId) === String(item.id) ? null : String(item.id)
-               )
-             }
-             STATUS={STATUS}
-             applyStatus={applyStatus}
-             setConfirmItem={setConfirmItem}
-           />
-         );
-         return (
-           <DayGroup group={group} expanded={expanded} onToggle={toggle} renderRow={renderRow} />
-         );
-       }}
-       extraData={`${refreshKey}-${expandedRowId}-${Array.from(openDays).join(",")}`}
-       itemLayoutAnimation={LinearTransition.duration(180)}
-       contentContainerStyle={{ paddingBottom: insets.bottom + 70, paddingTop: 8 }}
-       showsVerticalScrollIndicator={false}
-     />
-     
-   )
- ) : (
-   <ReAnimated.FlatList
+              <View className="flex-1 items-center justify-center px-5">
+                <Text className="text-neutral-400">No appointments to show.</Text>
+              </View>
+            ) : (
+              <ReAnimated.FlatList
+                data={allGroups}
+                keyExtractor={(g) => g.key}
+                renderItem={({ item: group }) => {
+                  const expanded = openDays.has(group.key);
+                  const toggle = () =>
+                    setOpenDays((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(group.key)) next.delete(group.key);
+                      else next.add(group.key);
+                      return next;
+                    });
+                  const renderRow = (item) => (
+                    <AppointmentRowCard
+                      appt={item}
+                      isExpanded={String(expandedRowId) === String(item.id)}
+                      onToggle={() =>
+                        setExpandedRowId(
+                          String(expandedRowId) === String(item.id) ? null : String(item.id)
+                        )
+                      }
+                      STATUS={STATUS}
+                      applyStatus={applyStatus}
+                      setConfirmItem={setConfirmItem}
+                    />
+                  );
+                  return (
+                    <DayGroup group={group} expanded={expanded} onToggle={toggle} renderRow={renderRow} />
+                  );
+                }}
+                extraData={`${refreshKey}-${expandedRowId}-${Array.from(openDays).join(",")}`}
+                itemLayoutAnimation={LinearTransition.duration(180)}
+                contentContainerStyle={{ paddingBottom: insets.bottom + 70, paddingTop: 8 }}
+                showsVerticalScrollIndicator={false}
+              />
+            )
+          ) : (
+            <ReAnimated.FlatList
               data={list}
               keyExtractor={(item) => String(item.id)}
               renderItem={({ item }) => (
@@ -531,7 +557,7 @@ export default function BarberAppointments() {
               contentContainerStyle={{ paddingBottom: insets.bottom + 70, paddingTop: 8 }}
               showsVerticalScrollIndicator={false}
             />
- )}
+          )}
         </View>
 
         {/* Confirm dialogs */}
