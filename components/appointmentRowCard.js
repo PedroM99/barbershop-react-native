@@ -1,18 +1,34 @@
 // components/AppointmentRowCard.js
+/**
+ * AppointmentRowCard
+ *
+ * Expandable row used in the barber's appointment list.
+ *
+ * Responsibilities:
+ * - Display a single appointment with time, customer name, and status.
+ * - Highlight the "next upcoming" appointment (today) with a different border.
+ * - Show additional details and inline actions when expanded (complete, no-show, cancel).
+ *
+ * Supports both:
+ * - Uncontrolled mode (internal expanded state).
+ * - Controlled mode (parent passes isExpanded and onToggle).
+ */
+
 import React, { useState, useCallback, memo } from "react";
 import { View, Text, Pressable } from "react-native";
 import ReAnimated, { FadeIn, FadeOut } from "react-native-reanimated";
 
-/* ------------------------------------------------------------------ */
-/* Local UI helpers                                                    */
-/* ------------------------------------------------------------------ */
-
+/**
+ * Visual configuration per appointment status
+ * (border and text color variants linked to status values).
+ */
 const BORDER_BY_STATUS = {
   scheduled: "border-[#58A6FF]",
   completed: "border-[#4CAF70]",
   canceled: "border-[#C26262]",
   no_show: "border-[#D0A24F]",
 };
+
 const TEXT_BY_STATUS = {
   scheduled: "text-[#58A6FF]",
   completed: "text-[#4CAF70]",
@@ -20,8 +36,13 @@ const TEXT_BY_STATUS = {
   no_show: "text-[#D0A24F]",
 };
 
+/**
+ * StatusChip
+ *
+ * Small pill showing the current appointment status with
+ * a status-specific label and color.
+ */
 const StatusChip = memo(function StatusChip({ status }) {
-  // Label formatting to match your dashboard style
   let label = String(status || "").toUpperCase();
   if (status === "scheduled") label = "BOOKED";
   if (status === "completed") label = "COMPLETED";
@@ -38,8 +59,16 @@ const StatusChip = memo(function StatusChip({ status }) {
   );
 });
 
-
-
+/**
+ * QuickActions
+ *
+ * Inline actions shown under an expanded appointment:
+ * - Mark as completed.
+ * - Mark as no-show.
+ * - Cancel appointment.
+ *
+ * Hidden for terminal states (completed, canceled, no-show).
+ */
 function QuickActions({ appt, STATUS, applyStatus, setConfirmItem }) {
   const isTerminal =
     appt.status === STATUS.COMPLETED ||
@@ -77,7 +106,13 @@ function QuickActions({ appt, STATUS, applyStatus, setConfirmItem }) {
   );
 }
 
-
+/**
+ * AppointmentRowCardBase
+ *
+ * Core card implementation. Exposed as a memoized AppointmentRowCard.
+ * Accepts an optional controlled API (isExpanded, onToggle) so parent lists
+ * can manage which row is open.
+ */
 function AppointmentRowCardBase({
   appt,
   isExpanded: controlledExpanded,
@@ -103,10 +138,11 @@ function AppointmentRowCardBase({
   return (
     <View
       className={`mb-3 rounded-2xl bg-neutral-900/60 border overflow-hidden ${
-      isNextUpcomingToday ? 'border-[#B08D57]' : 'border-white/10'}`}
+        isNextUpcomingToday ? "border-[#B08D57]" : "border-white/10"
+      }`}
       style={{ elevation: 2 }}
     >
-      {/* Header is the only pressable area → ripple stays in the header */}
+      {/* Header: main row content and tap target for expand/collapse */}
       <Pressable
         onPress={onToggle}
         android_ripple={{ color: "rgba(255,255,255,0.06)", borderless: false }}
@@ -114,7 +150,10 @@ function AppointmentRowCardBase({
       >
         <View className="flex-row items-center justify-between">
           <View className="flex-1 pr-3">
-            <Text className="text-[#EDEADE] text-base" style={{ fontFamily: "Inter-Medium" }}>
+            <Text
+              className="text-[#EDEADE] text-base"
+              style={{ fontFamily: "Inter-Medium" }}
+            >
               {appt?.time} • {appt?.customer?.name ?? "Customer"}
             </Text>
           </View>
@@ -135,7 +174,7 @@ function AppointmentRowCardBase({
               </Text>
             )}
 
-            {/* Inline QuickActions (same API/behavior as your original) */}
+            {/* Inline actions for updating appointment status */}
             <QuickActions
               appt={appt}
               STATUS={STATUS}

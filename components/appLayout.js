@@ -1,20 +1,28 @@
 // components/appLayout.js
 /**
- * AppLayout — Common page chrome for the app.
- * Uses NativeWind + safe-area inset to add bottom padding so content
- * never sits behind the floating Footer.
+ * AppLayout
+ *
+ * Shared layout wrapper for all top-level screens.
+ *
+ * Responsibilities:
+ * - Provide a full-height safe-area container so content does not overlap
+ *   with system UI on the left and right edges.
+ * - Render the shared bottom navigation Footer below any screen content.
+ *
+ * Usage:
+ * - Wrap screen-level JSX in <AppLayout> to get consistent structure/navigation.
  */
+
 import React from "react";
 import { View } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Footer from "./footerNavigation";
 
 export default function AppLayout({ children }) {
-  const insets = useSafeAreaInsets();
 
   return (
     <SafeAreaView edges={["left", "right"]} className="flex-1 bg-transparent">
-      <View className="flex-1" >
+      <View className="flex-1">
         {children}
       </View>
 

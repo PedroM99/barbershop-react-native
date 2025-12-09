@@ -6,19 +6,32 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useUser } from "../context/UserContext";
 import ConfirmAlert from "./confirmAlert";
 
+/**
+ * Footer
+ *
+ * Fixed bottom navigation bar shown across the app.
+ *
+ * Responsibilities:
+ * - Position a floating navigation bar above the system navigation area.
+ * - Render role-aware navigation: "Home" routes to BarberDashboard for barbers,
+ *   and Home for regular users.
+ * - Provide quick access to Home, Profile, and Logout.
+ * - Confirm logout using the shared ConfirmAlert component.
+ */
 export default function Footer() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const { user, setUser } = useUser(); // ← also read user
+  const { user, setUser } = useUser();
 
   const [showLogout, setShowLogout] = useState(false);
 
-  // Which screen should "Home" mean for this user?
+  // Determines which route name should be treated as "Home" for the current user
   const homeRouteName = useMemo(
     () => (user?.role === "barber" ? "BarberDashboard" : "Home"),
     [user?.role]
   );
 
+  // Reads the current route name from the navigation state
   const current = useMemo(() => {
     const state = navigation.getState?.();
     return state?.routes?.[state.index]?.name ?? "";
@@ -37,7 +50,7 @@ export default function Footer() {
         className="w-full flex-row items-center justify-around rounded-xl px-4 py-1.5 bg-[#F2EFE8] border border-black/10 shadow-md"
         style={{ elevation: 5 }}
       >
-        {/* Logout (danger tone) */}
+        {/* Logout button (styled with danger tone) */}
         <NavBtn
           onPress={() => setShowLogout(true)}
           active={false}
@@ -45,7 +58,7 @@ export default function Footer() {
           tone="danger"
         />
 
-        {/* Role-aware Home */}
+        {/* Role-aware Home: resets the stack to the appropriate home screen */}
         <NavBtn
           onPress={() => {
             if (isHomeActive) return;
@@ -55,7 +68,7 @@ export default function Footer() {
           icon="home"
         />
 
-        {/* Profile */}
+        {/* Profile: always navigates to the Profile screen */}
         <NavBtn
           onPress={() => navigation.navigate("Profile")}
           active={isProfile}
@@ -77,6 +90,20 @@ export default function Footer() {
   );
 }
 
+/**
+ * NavBtn
+ *
+ * Single icon-only navigation button used inside the footer bar.
+ *
+ * Props:
+ * - onPress: () => void      → handler for button press.
+ * - active: boolean          → whether this route is currently active.
+ * - icon: string             → MaterialIcons icon name.
+ * - tone: "default" | "danger" → visual variant; danger used for logout.
+ *
+ * The active state is indicated by a small accent bar above the icon
+ * (except for the danger variant, which is handled via color only).
+ */
 function NavBtn({ onPress, active, icon, tone = "default" }) {
   const base = "#2B2B2B";
   const accent = "#B08D57";

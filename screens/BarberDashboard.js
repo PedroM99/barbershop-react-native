@@ -1,5 +1,25 @@
 // screens/BarberDashboard.js
-import ReAnimated, { LinearTransition, FadeIn, FadeOut } from "react-native-reanimated";
+/**
+ * BarberDashboard
+ *
+ * Home screen for barbers.
+ *
+ * Responsibilities:
+ * - Show a "Next appointment" card with quick actions (cancel, view all).
+ * - List today's appointments with inline status controls.
+ * - Summarize appointment activity in memory (snapshot).
+ * - Seed dev appointments for the current day in development mode.
+ * - Route to:
+ *   - BarberAppointments ("view all" or full history).
+ *   - MakeAppointment (add new booking).
+ * - Intercept the Android hardware back button to ask for logout confirmation.
+ */
+
+import ReAnimated, {
+  LinearTransition,
+  FadeIn,
+  FadeOut,
+} from "react-native-reanimated";
 import React, { useMemo, useState, useCallback } from "react";
 import {
   View,
@@ -9,7 +29,7 @@ import {
   ImageBackground,
   Animated,
   Easing,
-  BackHandler
+  BackHandler,
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -27,6 +47,7 @@ import AppointmentRowCard from "../components/appointmentRowCard";
 /* Constants + helpers                                                */
 /* ------------------------------------------------------------------ */
 
+// Normalized status values shared with the appointment list components
 const STATUS = {
   BOOKED: "scheduled",
   COMPLETED: "completed",
@@ -34,13 +55,16 @@ const STATUS = {
   NO_SHOW: "no_show",
 };
 
-// Outlined style: subtle border + tinted text (no filled backgrounds)
+// Status → color mappings (outlined style)
+// These are not currently used inside this file, but kept here for
+// consistency if snapshot or header badges are reintroduced.
 const BORDER_BY_STATUS = {
   [STATUS.BOOKED]: "border-[#58A6FF]",
   [STATUS.COMPLETED]: "border-[#4CAF70]",
   [STATUS.CANCELED]: "border-[#C26262]",
   [STATUS.NO_SHOW]: "border-[#D0A24F]",
 };
+
 const TEXT_BY_STATUS = {
   [STATUS.BOOKED]: "text-[#58A6FF]",
   [STATUS.COMPLETED]: "text-[#4CAF70]",
@@ -48,6 +72,7 @@ const TEXT_BY_STATUS = {
   [STATUS.NO_SHOW]: "text-[#D0A24F]",
 };
 
+// Human-friendly date label for the dashboard header (e.g., "Monday, 22 January")
 function formatLongDate(d) {
   try {
     return new Intl.DateTimeFormat("en-US", {
@@ -60,6 +85,7 @@ function formatLongDate(d) {
   }
 }
 
+// Current date as "YYYY-MM-DD"
 function toTodayString(d = new Date()) {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -67,15 +93,26 @@ function toTodayString(d = new Date()) {
   return `${y}-${m}-${day}`;
 }
 
+// Build a Date from appointment's date/time (used for next-up selection)
 function toDateTime(appt) {
-  // Create a Date from YYYY-MM-DD + HH:mm (assumes local time)
   return new Date(`${appt.date}T${appt.time}`);
 }
 
 /* ------------------------------------------------------------------ */
-/* Hoisted component: NextUpCard (so it doesn't remount on list state) */
+/* NextUpCard: hoisted to avoid remounts when list state changes      */
 /* ------------------------------------------------------------------ */
 
+/**
+ * NextUpCard
+ *
+ * Collapsible card that shows the next upcoming appointment (if any)
+ * with quick access to:
+ * - Cancel the next appointment (if it is not in a terminal state).
+ * - Navigate to the full appointments list.
+ *
+ * Uses a manual height animation (Animated.Value) instead of layout
+ * animation to keep behavior predictable across platforms.
+ */
 function NextUpCard({ appt, onCancel, onViewAll }) {
   const [expandedNext, setExpandedNext] = useState(false);
   const anim = React.useRef(new Animated.Value(0)).current;
@@ -92,13 +129,17 @@ function NextUpCard({ appt, onCancel, onViewAll }) {
     }).start();
   };
 
+  // Empty-state card when there is no upcoming appointment
   if (!appt) {
     return (
       <View
         className="mx-5 mt-3 rounded-2xl p-6 bg-neutral-900/60 border border-white/10"
         style={{ elevation: 2 }}
       >
-        <Text className="text-[#EDEADE] text-lg" style={{ fontFamily: "Inter-Medium" }}>
+        <Text
+          className="text-[#EDEADE] text-lg"
+          style={{ fontFamily: "Inter-Medium" }}
+        >
           No upcoming appointments
         </Text>
         <Text className="text-neutral-400 text-base mt-1">
@@ -119,7 +160,6 @@ function NextUpCard({ appt, onCancel, onViewAll }) {
   });
 
   return (
-    
     <Pressable
       onPress={toggle}
       android_ripple={{ color: "rgba(255,255,255,0.06)", borderless: false }}
@@ -128,22 +168,30 @@ function NextUpCard({ appt, onCancel, onViewAll }) {
     >
       <View className="flex-row items-center justify-between">
         <View className="flex-1 pr-3">
-          <Text className="text-xs text-neutral-300 mb-1">Next appointment</Text>
-          <Text className="text-[#EDEADE]" style={{ fontFamily: "Inter-Medium" }}>
+          <Text className="text-xs text-neutral-300 mb-1">
+            Next appointment
+          </Text>
+          <Text
+            className="text-[#EDEADE]"
+            style={{ fontFamily: "Inter-Medium" }}
+          >
             {appt.date} • {appt.time} • {appt.customer?.name ?? "Customer"}
           </Text>
         </View>
-        {/* We'll use StatusChip from parent scope through props */}
+        {/* Status chip could be added here if needed, using STATUS + colors. */}
       </View>
 
-      {/* Hidden measurer (same markup as the visible expanded section) */}
+      {/* Hidden measurer: same markup as the visible expanded section.
+         Used to compute the animated height without layout flicker. */}
       <View
         style={{ position: "absolute", left: -9999, opacity: 0 }}
         onLayout={(e) => setContentH(e.nativeEvent.layout.height)}
       >
         <View className="mt-3 border-t border-white/10 pt-3">
           {!!appt.customer?.phone && (
-            <Text className="text-neutral-300 text-[13px]">Phone: {appt.customer.phone}</Text>
+            <Text className="text-neutral-300 text-[13px]">
+              Phone: {appt.customer.phone}
+            </Text>
           )}
           <View className="flex-row gap-2 mt-3">
             {!isTerminal && (
@@ -166,11 +214,13 @@ function NextUpCard({ appt, onCancel, onViewAll }) {
         </View>
       </View>
 
-      {/* Animated section */}
+      {/* Animated expanded content */}
       <Animated.View style={{ height, overflow: "hidden" }}>
         <View className="mt-3 border-t border-white/10 pt-3">
           {!!appt.customer?.phone && (
-            <Text className="text-neutral-300 text-[13px]">Phone: {appt.customer.phone}</Text>
+            <Text className="text-neutral-300 text-[13px]">
+              Phone: {appt.customer.phone}
+            </Text>
           )}
           <View className="flex-row gap-2 mt-3">
             {!isTerminal && (
@@ -206,55 +256,60 @@ export default function BarberDashboard() {
   const { user, setUser } = useUser();
 
   const [refreshKey, setRefreshKey] = useState(0);
-  const [confirmItem, setConfirmItem] = useState(null); // { appt, action: 'cancel'|'no_show' }
-  const [expandedRowId, setExpandedRowId] = useState(null); // appt.id or null
+  const [confirmItem, setConfirmItem] = useState(null); // { appt, action: 'cancel' | 'no_show' }
+  const [expandedRowId, setExpandedRowId] = useState(null); // appointment id or null
   const [showLogout, setShowLogout] = useState(false);
-  const rowHeightsRef = React.useRef(new Map());
+  const rowHeightsRef = React.useRef(new Map()); // reserved if per-row measurements are needed later
 
   const today = useMemo(() => new Date(), []);
   const todayStr = toTodayString(today);
   const longDate = formatLongDate(today);
   const firstName = user?.name ? user.name.match(/^\S+/)[0] : "";
 
-  const FOOTER_PAD = insets.bottom + 70; // space to clear your floating footer nav
-  
+  // Space at the bottom to clear the floating footer navigation
+  const FOOTER_PAD = insets.bottom + 70;
 
-
-
+  // Intercept Android hardware back button to show logout confirmation
   const onBackPress = useCallback(() => {
     setShowLogout(true);
     return true;
   }, []);
-  
+
   useFocusEffect(
     useCallback(() => {
-      const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      const sub = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress
+      );
       return () => sub.remove();
     }, [onBackPress])
   );
 
   /* ------------------------------- Data ------------------------------- */
 
+  // Resolve the barber profile associated with the logged-in user
   const barber = useMemo(() => {
     if (!user?.barberId) return null;
     return Barbers.find((b) => String(b.id) === String(user.barberId));
   }, [user?.barberId, refreshKey]);
 
+  // Dev-time seeding: ensure the barber has a set of appointments for today
   React.useEffect(() => {
     if (__DEV__ && barber?.id) {
       ensureDevAppointmentsForDay({
-        barberId: barber.id,           // Andre's id when you're testing that profile
+        barberId: barber.id,
         date: toTodayString(new Date()),
         start: "09:00",
         intervalMins: 60,
-        slots: 10,                     // <- tweak freely
-        // customerPool: ["user2","user7"], // optional: restrict pool
+        slots: 10,
         mirrorToCustomer: true,
+        // customerPool can be provided to restrict the user pool if desired
       });
-      setRefreshKey((k) => k + 1);     // re-run memos to pick up seeded data
+      setRefreshKey((k) => k + 1);
     }
   }, [barber?.id]);
 
+  // Today's appointments, sorted by time and enriched with customer data
   const todays = useMemo(() => {
     if (!barber?.appointments) return [];
     return barber.appointments
@@ -263,10 +318,12 @@ export default function BarberDashboard() {
       .sort((a, b) => a.time.localeCompare(b.time))
       .map((a) => ({
         ...a,
-        customer: users.find((u) => String(u.id) === String(a.customerId)) || null,
+        customer:
+          users.find((u) => String(u.id) === String(a.customerId)) || null,
       }));
   }, [barber?.appointments, todayStr, refreshKey]);
 
+  // Aggregated snapshot for today (total, upcoming, completed, canceled, no-show)
   const snapshot = useMemo(() => {
     let total = todays.length;
     let completed = 0,
@@ -281,52 +338,59 @@ export default function BarberDashboard() {
     return { total, completed, canceled, noShow, upcoming };
   }, [todays]);
 
-const nextUp = useMemo(() => {
-  if (!barber?.appointments) return null;
+  // Determine the "next up" appointment:
+  // - Prefer upcoming scheduled appointments for today (with a 10-minute grace).
+  // - Otherwise, pick the earliest scheduled appointment after today.
+  const nextUp = useMemo(() => {
+    if (!barber?.appointments) return null;
 
-  const now = new Date();
-  const graceMs = 10 * 60 * 1000;             // 10-min grace so a :00 appt doesn't vanish at :01
-  const cutoff = new Date(now.getTime() - graceMs);
+    const now = new Date();
+    const graceMs = 10 * 60 * 1000; // 10-minute grace window
+    const cutoff = new Date(now.getTime() - graceMs);
 
-  const enrich = (a) => ({ ...a, when: toDateTime(a) });
+    const enrich = (a) => ({ ...a, when: toDateTime(a) });
 
-  // 1) Prefer today's upcoming scheduled
-  const todaysUpcoming = barber.appointments
-    .filter(a => a.status === STATUS.BOOKED && a.date === todayStr)
-    .map(enrich)
-    .filter(a => a.when >= cutoff)
-    .sort((a, b) => a.when - b.when);
+    // 1) Today's scheduled appointments that are still upcoming
+    const todaysUpcoming = barber.appointments
+      .filter((a) => a.status === STATUS.BOOKED && a.date === todayStr)
+      .map(enrich)
+      .filter((a) => a.when >= cutoff)
+      .sort((a, b) => a.when - b.when);
 
-  if (todaysUpcoming.length) {
-    const appt = todaysUpcoming[0];
+    if (todaysUpcoming.length) {
+      const appt = todaysUpcoming[0];
+      return {
+        ...appt,
+        customer:
+          users.find((u) => String(u.id) === String(appt.customerId)) || null,
+      };
+    }
+
+    // 2) If none today, pick the earliest scheduled appointment strictly after today
+    const futureUpcoming = barber.appointments
+      .filter((a) => a.status === STATUS.BOOKED && a.date > todayStr)
+      .map(enrich)
+      .sort((a, b) => a.when - b.when);
+
+    if (!futureUpcoming.length) return null;
+
+    const appt = futureUpcoming[0];
     return {
       ...appt,
-      customer: users.find(u => String(u.id) === String(appt.customerId)) || null,
+      customer:
+        users.find((u) => String(u.id) === String(appt.customerId)) || null,
     };
-  }
-
-  // 2) Otherwise, earliest future scheduled (strictly after today)
-  const futureUpcoming = barber.appointments
-    .filter(a => a.status === STATUS.BOOKED && a.date > todayStr) // YYYY-MM-DD strings compare lexicographically
-    .map(enrich)
-    .sort((a, b) => a.when - b.when);
-
-  if (!futureUpcoming.length) return null;
-
-  const appt = futureUpcoming[0];
-  return {
-    ...appt,
-    customer: users.find(u => String(u.id) === String(appt.customerId)) || null,
-  };
-}, [barber?.appointments, refreshKey, todayStr]);
-
+  }, [barber?.appointments, refreshKey, todayStr]);
 
   /* ------------------------------ Mutators ------------------------------ */
 
+  // Update the appointment status in the barber dataset
   const mutateBarberAppt = useCallback(
     (apptId, nextStatus) => {
       if (!barber) return;
-      const idx = Barbers.findIndex((b) => String(b.id) === String(barber.id));
+      const idx = Barbers.findIndex(
+        (b) => String(b.id) === String(barber.id)
+      );
       if (idx < 0) return;
       const list = Barbers[idx].appointments || [];
       const i = list.findIndex((x) => String(x.id) === String(apptId));
@@ -335,6 +399,7 @@ const nextUp = useMemo(() => {
     [barber]
   );
 
+  // Mirror the status change into the corresponding customer's appointments
   const mirrorToCustomer = useCallback((custId, apptId, nextStatus) => {
     const u = users.find((uu) => String(uu.id) === String(custId));
     if (!u || !Array.isArray(u.appointments)) return;
@@ -342,6 +407,7 @@ const nextUp = useMemo(() => {
     if (i >= 0) u.appointments[i] = { ...u.appointments[i], status: nextStatus };
   }, []);
 
+  // Combined status update: apply to barber + customer and then trigger a refresh
   const applyStatus = useCallback(
     (appt, nextStatus) => {
       mutateBarberAppt(appt.id, nextStatus);
@@ -351,12 +417,18 @@ const nextUp = useMemo(() => {
     [mutateBarberAppt, mirrorToCustomer]
   );
 
-  /* --------------------------- Inner Components -------------------------- */
+  /* --------------------------- Inner components -------------------------- */
 
-const AddAppointmentCard = () => (
-<View
+  /**
+   * AddAppointmentCard
+   *
+   * Floating action tile used to navigate to the MakeAppointment screen
+   * for the current barber. Positioned above the footer navigation bar.
+   */
+  const AddAppointmentCard = () => (
+    <View
       className="mb-3 rounded-2xl"
-      style={{ borderRadius: 16, elevation: 2 }} // shadow/elevation lives here
+      style={{ borderRadius: 16, elevation: 2 }}
     >
       <Pressable
         onPress={() =>
@@ -374,7 +446,7 @@ const AddAppointmentCard = () => (
     </View>
   );
 
-
+  // ID of the "next up" appointment, but only if it is scheduled for today
   const nextIdToday = nextUp?.date === todayStr ? String(nextUp.id) : null;
 
   /* -------------------------------- Render -------------------------------- */
@@ -400,7 +472,7 @@ const AddAppointmentCard = () => (
           <Text className="text-neutral-400 text-xs mt-1">{longDate}</Text>
         </View>
 
-        {/* Always-visible "Next up" card */}
+        {/* Always-visible "Next up" appointment card */}
         <NextUpCard
           appt={nextUp}
           onCancel={(appt) => setConfirmItem({ appt, action: "cancel" })}
@@ -412,7 +484,7 @@ const AddAppointmentCard = () => (
           }
         />
 
-        {/* Body */}
+        {/* Body: list of today's appointments, or empty-state when none */}
         <View className="flex-1">
           {todays.length === 0 ? (
             <View className="flex-1 px-5">
@@ -420,7 +492,9 @@ const AddAppointmentCard = () => (
                 className="flex-1 items-center justify-center"
                 style={{ paddingBottom: insets.bottom + 70 + 72 }}
               >
-                <Text className="text-neutral-400">No appointments today.</Text>
+                <Text className="text-neutral-400">
+                  No appointments today.
+                </Text>
               </View>
             </View>
           ) : (
@@ -428,17 +502,19 @@ const AddAppointmentCard = () => (
               data={todays}
               keyExtractor={(item) => String(item.id)}
               renderItem={({ item }) => (
-              <AppointmentRowCard
-              appt={item}
-              isExpanded={expandedRowId === item.id}
-              onToggle={() =>
-                setExpandedRowId(expandedRowId === item.id ? null : item.id)
-              }
-              STATUS={STATUS}
-              applyStatus={applyStatus}
-              setConfirmItem={setConfirmItem}
-              isNextUpcomingToday={nextIdToday === String(item.id)} 
-              />
+                <AppointmentRowCard
+                  appt={item}
+                  isExpanded={expandedRowId === item.id}
+                  onToggle={() =>
+                    setExpandedRowId(
+                      expandedRowId === item.id ? null : item.id
+                    )
+                  }
+                  STATUS={STATUS}
+                  applyStatus={applyStatus}
+                  setConfirmItem={setConfirmItem}
+                  isNextUpcomingToday={nextIdToday === String(item.id)}
+                />
               )}
               showsVerticalScrollIndicator={false}
               extraData={expandedRowId}
@@ -446,27 +522,29 @@ const AddAppointmentCard = () => (
               contentContainerStyle={{
                 paddingHorizontal: 20,
                 paddingTop: 12,
-                paddingBottom: FOOTER_PAD + 72 ,
+                paddingBottom: FOOTER_PAD + 72,
               }}
               onRefresh={() => setRefreshKey((k) => k + 1)}
               refreshing={false}
             />
           )}
         </View>
+
+        {/* Background band behind the footer area */}
         <View
           pointerEvents="none"
           style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: FOOTER_PAD + 50,
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: FOOTER_PAD + 50,
           }}
         >
           <View className="flex-1 bg-neutral-900 border-t border-white/10" />
         </View>
 
-        {/* Fixed Add button above the footer */}
+        {/* Fixed "add appointment" button above the footer */}
         <View
           pointerEvents="box-none"
           style={{
@@ -479,7 +557,8 @@ const AddAppointmentCard = () => (
           <AddAppointmentCard />
         </View>
 
-        {/* Confirm dialogs */}
+        {/* Confirmation dialogs for appointment actions and logout */}
+
         <ConfirmAlert
           visible={!!confirmItem}
           message={

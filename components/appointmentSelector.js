@@ -1,4 +1,6 @@
-// components/appointmentSelector.js (booking-only, updated)
+// components/appointmentSelector.js
+// AppointmentSelector: calendar and time-slot selector for booking an appointment
+
 import React, { useMemo, useState, memo } from "react";
 import { View, Text, Pressable } from "react-native";
 import { Calendar } from "react-native-calendars";
@@ -6,22 +8,32 @@ import PropTypes from "prop-types";
 import ConfirmAlert from "./confirmAlert";
 import SuccessButton from "./successButton";
 
+// Renders the time slots and confirmation button for the currently selected date
 const BookSection = memo(function BookSection({
   selectedDate,
   selectedTime,
   setSelectedTime,
   getAvailableSlots,
   confirmBooking,
-  successToken, // ⬅️ comes from the screen
+  successToken,
 }) {
   if (!selectedDate) return null;
+
   const available = getAvailableSlots(selectedDate);
+
   if (available.length === 0) {
-    return <Text className="text-neutral-400 mt-3">No slots available for {selectedDate}</Text>;
+    return (
+      <Text className="text-neutral-400 mt-3">
+        No slots available for {selectedDate}
+      </Text>
+    );
   }
+
   return (
     <View className="mt-3">
-      <Text className="text-sm font-semibold text-neutral-300 mb-2">Available Time Slots</Text>
+      <Text className="text-sm font-semibold text-neutral-300 mb-2">
+        Available Time Slots
+      </Text>
       <View className="flex-row flex-wrap">
         {available.map((slot) => {
           const isSel = selectedTime === slot;
@@ -34,7 +46,9 @@ const BookSection = memo(function BookSection({
               }`}
               android_ripple={{ color: "rgba(255,255,255,0.06)", borderless: false }}
             >
-              <Text className={isSel ? "text-black font-semibold" : "text-[#EDEADE]"}>{slot}</Text>
+              <Text className={isSel ? "text-black font-semibold" : "text-[#EDEADE]"}>
+                {slot}
+              </Text>
             </Pressable>
           );
         })}
@@ -56,19 +70,22 @@ export default function AppointmentSelector({
   barberId,
   userId,
   onConfirm,
-  successToken, 
+  successToken,
 }) {
+  // Local UI state for current selection and validation
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
   const [validationOpen, setValidationOpen] = useState(false);
 
   const isPast = (dateStr) => dateStr < new Date().toISOString().split("T")[0];
 
+  // Filter appointments to only include the current barber
   const scopedAppointments = useMemo(
     () => appointments.filter((a) => String(a.barberId) === String(barberId)),
     [appointments, barberId]
   );
 
+  // Group appointments by date with an array of booked times for each date
   const bookedByDate = useMemo(() => {
     const map = {};
     scopedAppointments.forEach(({ date, time }) => {
@@ -78,11 +95,14 @@ export default function AppointmentSelector({
     return map;
   }, [scopedAppointments]);
 
+  // Mark dates that have appointments and visually differentiate fully booked days
   const markedDates = useMemo(() => {
     const marks = {};
+
     Object.keys(bookedByDate).forEach((date) => {
       const bookedCount = bookedByDate[date].length;
       const total = timeSlots.length;
+
       if (bookedCount === total) {
         marks[date] = {
           selected: true,
@@ -94,6 +114,7 @@ export default function AppointmentSelector({
         marks[date] = { selected: true, selectedColor: "#3a2a00" };
       }
     });
+
     if (selectedDate) {
       marks[selectedDate] = {
         ...(marks[selectedDate] || {}),
@@ -103,23 +124,27 @@ export default function AppointmentSelector({
         },
       };
     }
+
     return marks;
   }, [bookedByDate, selectedDate, timeSlots]);
 
+  // Returns available time slots for a given date (not yet booked)
   const getAvailableSlots = (date) => {
     const taken = bookedByDate[date] || [];
     return timeSlots.filter((slot) => !taken.includes(slot));
   };
 
+  // Handles day selection; prevents selection of past or fully booked dates
   const handleDayPress = (day) => {
     const date = day.dateString;
     if (isPast(date)) return;
     if ((bookedByDate[date]?.length || 0) >= timeSlots.length) return;
+
     setSelectedDate(date);
     setSelectedTime(null);
   };
 
-  // ✅ Only validate & call the parent; DON'T animate here
+  // Validates the selection and forwards the booking to the parent via onConfirm
   const confirmBooking = () => {
     if (!selectedDate || !selectedTime) {
       setValidationOpen(true);
@@ -165,7 +190,7 @@ export default function AppointmentSelector({
         setSelectedTime={setSelectedTime}
         getAvailableSlots={getAvailableSlots}
         confirmBooking={confirmBooking}
-        successToken={successToken} // ⬅️ comes from screen
+        successToken={successToken}
       />
 
       <ConfirmAlert
@@ -192,5 +217,5 @@ AppointmentSelector.propTypes = {
   barberId: PropTypes.string.isRequired,
   userId: PropTypes.string,
   onConfirm: PropTypes.func, // (date, time) => void
-  successToken: PropTypes.oneOfType([PropTypes.number, PropTypes.string]), // ⬅️ new
+  successToken: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 };

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { Pressable, Text, StyleSheet } from "react-native";
-import Animated, {
+import Animated,
+{
   useSharedValue,
   useAnimatedStyle,
   withTiming,
@@ -12,25 +13,41 @@ import Animated, {
 import { MaterialIcons } from "@expo/vector-icons";
 
 /**
- * SuccessButton (no logic inside):
- * - Base button keeps your normal background (gold by default).
- * - Green flash is an overlay that fades in/out (no color snap).
- * - Text crossfades to a check and back (no flicker).
+ * SuccessButton
+ *
+ * Animated confirmation button used in the booking flow.
+ *
+ * Responsibilities:
+ * - Render a pressable button with a configurable label and styling.
+ * - Play a success animation (overlay flash + icon swap + scale pop)
+ *   whenever the `successToken` prop changes.
+ *
+ * Animation design:
+ * - The base background color comes from Tailwind/NativeWind classes.
+ * - A green overlay fades in and out above the button (no abrupt color changes).
+ * - The label crossfades into a check icon and back.
+ * - A small scale "pop" is applied to the button container on success.
  *
  * Props:
  * - label: string
+ *     Text content shown on the button.
  * - onPress: () => void
- * - successToken: number|string   // change to trigger success animation
- * - durationMs?: number           // total duration (default 900)
+ *     Callback executed when the button is pressed.
+ * - successToken: number | string
+ *     When this value changes, the success animation is triggered.
+ * - durationMs?: number
+ *     Total conceptual duration of the animation sequence (default 900).
  * - disabled?: boolean
- * - containerClassName?: string   // override base classes if you want
- * - textClassName?: string        // override text classes (default black)
+ *     Disables the Pressable when true.
+ * - containerClassName?: string
+ *     Tailwind/NativeWind classes for the outer container.
+ * - textClassName?: string
+ *     Tailwind/NativeWind classes for the label text.
  */
 export default function SuccessButton({
   label = "Confirm Appointment",
   onPress,
   successToken,
-  durationMs = 900,
   disabled,
   containerClassName = "h-14 rounded-2xl border border-white/10 items-center justify-center bg-[#B08D57] overflow-hidden",
   textClassName = "text-[16px] text-black",
@@ -38,53 +55,56 @@ export default function SuccessButton({
   const prev = useRef(successToken);
 
   // Separate animation tracks
-  const flash = useSharedValue(0); // green overlay opacity
-  const swap  = useSharedValue(0); // 0 = show text, 1 = show check
-  const pop   = useSharedValue(0); // tiny success scale
+  const flash = useSharedValue(0); // controls opacity of the green overlay
+  const swap = useSharedValue(0);  // 0 = show label, 1 = show check icon
+  const pop = useSharedValue(0);   // scale "pop" value for the button container
 
-  // container: only scale (leave background to className)
+  // Container style: slight scale change on success
   const containerStyle = useAnimatedStyle(() => ({
     transform: [{ scale: 1 + pop.value * 0.06 }],
   }));
 
-  // overlay: green wash opacity (no background snap)
+  // Overlay style: fade the green wash in and out
   const overlayStyle = useAnimatedStyle(() => ({
     opacity: flash.value,
   }));
 
-  // text ↔ check crossfade
+  // Label crossfade and vertical offset
   const textStyle = useAnimatedStyle(() => ({
     opacity: 1 - swap.value,
     transform: [{ translateY: -8 * swap.value }],
   }));
+
+  // Check icon crossfade and vertical offset
   const checkStyle = useAnimatedStyle(() => ({
     opacity: swap.value,
     transform: [{ translateY: (1 - swap.value) * 8 }],
   }));
 
-  // play on token change
+  // Trigger the success animation whenever successToken changes
   useEffect(() => {
     if (prev.current === successToken) return;
     prev.current = successToken;
 
-    // green overlay
+    // Green overlay: fade in, hold briefly, then fade out
     flash.value = withSequence(
       withTiming(1, { duration: 220, easing: Easing.out(Easing.cubic) }),
       withDelay(260, withTiming(0, { duration: 320 }))
     );
 
-    // text -> check -> text
+    // Swap label → check → label using a crossfade
     swap.value = withSequence(
-      withTiming(1, { duration: 300 }),                     // show check
-      withDelay(300, withTiming(0, { duration: 220 }))      // back to text
+      withTiming(1, { duration: 300 }),                // show check
+      withDelay(300, withTiming(0, { duration: 220 })) // back to label
     );
 
-    // tiny pop
+    // Small scale "pop" on the button
     pop.value = withSequence(
       withTiming(1, { duration: 160, easing: Easing.out(Easing.cubic) }),
       withTiming(0, { duration: 220 })
     );
 
+    // Cleanup to avoid stale animation values if the component unmounts
     return () => {
       cancelAnimation(flash);
       cancelAnimation(swap);
@@ -103,25 +123,31 @@ export default function SuccessButton({
       className="w-full"
     >
       <Animated.View className={containerClassName} style={containerStyle}>
-        {/* Green overlay (non-interactive) */}
+        {/* Green overlay sitting above the base background */}
         <Animated.View
           pointerEvents="none"
           style={[
             StyleSheet.absoluteFill,
-            { borderRadius: 10, backgroundColor: "rgba(21, 100, 50, 1)" }, // green-600 @ ~35% opacity
+            { borderRadius: 10, backgroundColor: "rgba(21, 100, 50, 1)" },
             overlayStyle,
           ]}
         />
 
-        {/* Label */}
-        <Animated.View style={textStyle} className="absolute inset-0 items-center justify-center">
+        {/* Button label */}
+        <Animated.View
+          style={textStyle}
+          className="absolute inset-0 items-center justify-center"
+        >
           <Text style={{ fontFamily: "Inter-SemiBold" }} className={textClassName}>
             {label}
           </Text>
         </Animated.View>
 
-        {/* Check */}
-        <Animated.View style={checkStyle} className="absolute inset-0 items-center justify-center">
+        {/* Success check icon */}
+        <Animated.View
+          style={checkStyle}
+          className="absolute inset-0 items-center justify-center"
+        >
           <MaterialIcons name="check" size={26} color="#111111" />
         </Animated.View>
       </Animated.View>
