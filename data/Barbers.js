@@ -101,6 +101,50 @@ const barbers = [
       { id: '502', date: '2025-09-03', time: '10:00', customerId: 'user14', status: 'scheduled', barberId: '5' },
       { id: '503', date: '2025-10-10', time: '10:00', customerId: 'user3', status: 'scheduled', barberId: '5' },
       { id: '504', date: '2025-12-24', time: '10:00', customerId: 'user1', status: 'scheduled', barberId: '5' },
+      // FULL day #1 — 2025-12-18 (all slots booked)
+{ id: '505', date: '2025-12-18', time: '09:00', customerId: 'user2',  status: 'scheduled', barberId: '5' },
+{ id: '506', date: '2025-12-18', time: '10:00', customerId: 'user3',  status: 'scheduled', barberId: '5' },
+{ id: '507', date: '2025-12-18', time: '11:00', customerId: 'user4',  status: 'scheduled', barberId: '5' },
+{ id: '508', date: '2025-12-18', time: '13:00', customerId: 'user5',  status: 'scheduled', barberId: '5' },
+{ id: '509', date: '2025-12-18', time: '14:00', customerId: 'user6',  status: 'scheduled', barberId: '5' },
+{ id: '510', date: '2025-12-18', time: '15:00', customerId: 'user7',  status: 'scheduled', barberId: '5' },
+{ id: '511', date: '2025-12-18', time: '16:00', customerId: 'user8',  status: 'scheduled', barberId: '5' },
+
+// PARTIAL day #1 — 2025-12-17
+{ id: '512', date: '2025-12-17', time: '09:00', customerId: 'user9',  status: 'scheduled', barberId: '5' },
+{ id: '513', date: '2025-12-17', time: '13:00', customerId: 'user10', status: 'scheduled', barberId: '5' },
+{ id: '514', date: '2025-12-17', time: '16:00', customerId: 'user11', status: 'scheduled', barberId: '5' },
+
+// PARTIAL day #2 — 2025-12-19
+{ id: '515', date: '2025-12-19', time: '10:00', customerId: 'user12', status: 'scheduled', barberId: '5' },
+{ id: '516', date: '2025-12-19', time: '11:00', customerId: 'user13', status: 'scheduled', barberId: '5' },
+{ id: '517', date: '2025-12-19', time: '15:00', customerId: 'user14', status: 'scheduled', barberId: '5' },
+
+// PARTIAL day #3 — 2025-12-20
+{ id: '518', date: '2025-12-20', time: '09:00', customerId: 'user15', status: 'scheduled', barberId: '5' },
+{ id: '519', date: '2025-12-20', time: '14:00', customerId: 'user16', status: 'scheduled', barberId: '5' },
+
+// FULL day #2 — 2025-12-24 (you already have 10:00 as id '504'; add the rest)
+{ id: '520', date: '2025-12-24', time: '09:00', customerId: 'user17', status: 'scheduled', barberId: '5' },
+// keep your existing: { id: '504', date: '2025-12-24', time: '10:00', ... }
+{ id: '521', date: '2025-12-24', time: '11:00', customerId: 'user18', status: 'scheduled', barberId: '5' },
+{ id: '522', date: '2025-12-24', time: '13:00', customerId: 'user19', status: 'scheduled', barberId: '5' },
+{ id: '523', date: '2025-12-24', time: '14:00', customerId: 'user20', status: 'scheduled', barberId: '5' },
+{ id: '524', date: '2025-12-24', time: '15:00', customerId: 'user21', status: 'scheduled', barberId: '5' },
+{ id: '525', date: '2025-12-24', time: '16:00', customerId: 'user22', status: 'scheduled', barberId: '5' },
+
+// PARTIAL day #4 — 2025-12-27
+{ id: '526', date: '2025-12-27', time: '11:00', customerId: 'user23', status: 'scheduled', barberId: '5' },
+{ id: '527', date: '2025-12-27', time: '13:00', customerId: 'user24', status: 'scheduled', barberId: '5' },
+{ id: '528', date: '2025-12-27', time: '14:00', customerId: 'user25', status: 'scheduled', barberId: '5' },
+{ id: '529', date: '2025-12-27', time: '15:00', customerId: 'user26', status: 'scheduled', barberId: '5' },
+
+// PARTIAL day #5 — 2025-12-30
+{ id: '530', date: '2025-12-30', time: '09:00', customerId: 'user27', status: 'scheduled', barberId: '5' },
+{ id: '531', date: '2025-12-30', time: '10:00', customerId: 'user28', status: 'scheduled', barberId: '5' },
+{ id: '532', date: '2025-12-30', time: '13:00', customerId: 'user29', status: 'scheduled', barberId: '5' },
+{ id: '533', date: '2025-12-30', time: '16:00', customerId: 'user30', status: 'scheduled', barberId: '5' },
+
     ],
   },
   {

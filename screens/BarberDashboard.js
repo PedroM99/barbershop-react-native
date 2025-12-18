@@ -25,7 +25,6 @@ import {
   View,
   Text,
   Pressable,
-  FlatList,
   ImageBackground,
   Animated,
   Easing,
@@ -55,22 +54,6 @@ const STATUS = {
   NO_SHOW: "no_show",
 };
 
-// Status → color mappings (outlined style)
-// These are not currently used inside this file, but kept here for
-// consistency if snapshot or header badges are reintroduced.
-const BORDER_BY_STATUS = {
-  [STATUS.BOOKED]: "border-[#58A6FF]",
-  [STATUS.COMPLETED]: "border-[#4CAF70]",
-  [STATUS.CANCELED]: "border-[#C26262]",
-  [STATUS.NO_SHOW]: "border-[#D0A24F]",
-};
-
-const TEXT_BY_STATUS = {
-  [STATUS.BOOKED]: "text-[#58A6FF]",
-  [STATUS.COMPLETED]: "text-[#4CAF70]",
-  [STATUS.CANCELED]: "text-[#C26262]",
-  [STATUS.NO_SHOW]: "text-[#D0A24F]",
-};
 
 // Human-friendly date label for the dashboard header (e.g., "Monday, 22 January")
 function formatLongDate(d) {
@@ -178,7 +161,6 @@ function NextUpCard({ appt, onCancel, onViewAll }) {
             {appt.date} • {appt.time} • {appt.customer?.name ?? "Customer"}
           </Text>
         </View>
-        {/* Status chip could be added here if needed, using STATUS + colors. */}
       </View>
 
       {/* Hidden measurer: same markup as the visible expanded section.
@@ -301,7 +283,7 @@ export default function BarberDashboard() {
         date: toTodayString(new Date()),
         start: "09:00",
         intervalMins: 60,
-        slots: 10,
+        slots: 8,
         mirrorToCustomer: true,
         // customerPool can be provided to restrict the user pool if desired
       });

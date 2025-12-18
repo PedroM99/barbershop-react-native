@@ -106,12 +106,12 @@ export default function AppointmentSelector({
       if (bookedCount === total) {
         marks[date] = {
           selected: true,
-          selectedColor: "#4a0000",
+          selectedColor: "#6d0909ff",
           disabled: true,
           disableTouchEvent: true,
         };
       } else if (bookedCount > 0) {
-        marks[date] = { selected: true, selectedColor: "#3a2a00" };
+        marks[date] = { selected: true, selectedColor: "#B08D57" };
       }
     });
 
@@ -120,7 +120,7 @@ export default function AppointmentSelector({
         ...(marks[selectedDate] || {}),
         selected: true,
         customStyles: {
-          container: { borderWidth: 2, borderColor: "#B08D57", borderRadius: 8 },
+          container: { borderWidth: 2, borderColor: "#ffffffff", borderRadius: 8 },
         },
       };
     }
@@ -171,12 +171,12 @@ export default function AppointmentSelector({
           monthTextColor: "#EDEADE",
           dayTextColor: "#EDEADE",
           todayTextColor: "#B08D57",
-          selectedDayBackgroundColor: "#B08D57",
+          selectedDayBackgroundColor: "#ffffffff",
           selectedDayTextColor: "#111111",
           arrowColor: "#EDEADE",
           "stylesheet.day.basic": {
             base: { width: 36, height: 36, alignItems: "center", justifyContent: "center" },
-            selected: { backgroundColor: "#B08D57", borderRadius: 8 },
+            selected: { backgroundColor: "#ffffffff", borderRadius: 8 },
             todayText: { color: "#B08D57" },
           },
         }}

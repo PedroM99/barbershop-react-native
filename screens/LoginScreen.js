@@ -163,8 +163,7 @@ export default function LoginScreen({ navigation }) {
               {/* Form fields */}
               <View>
                 <Text className="text-[12px] font-semibold text-neutral-300 mb-1">
-                  Username or Phone (e.g.,{" "}
-                  <Text className="text-[#EDEADE]">John Doe</Text>)
+                  Username or Phone
                 </Text>
                 <TextInput
                   value={identifier}
@@ -177,8 +176,7 @@ export default function LoginScreen({ navigation }) {
                 />
 
                 <Text className="text-[12px] font-semibold text-neutral-300 mb-1">
-                  Password (e.g.,{" "}
-                  <Text className="text-[#EDEADE]">demo123</Text>)
+                  Password 
                 </Text>
                 <TextInput
                   value={password}

@@ -902,7 +902,9 @@ export default function ProfileScreen() {
             <View className="mt-3">
               <Text className="text-neutral-400 text-xs">Prices</Text>
               <View className="flex-row justify-between mt-1">
-                <Text className="text-[#EDEADE]">Haircut</Text>
+                <Text className="text-[#EDEADE]">
+                  Haircut
+                </Text>
                 <Text className="text-[#EDEADE]">
                   {linkedBarber?.prices?.haircut || "-"}
                 </Text>
