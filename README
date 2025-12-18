@@ -1,0 +1,34 @@
+# Barbershop App (React Native)
+
+A two-sided mobile app where **clients book appointments** and **barbers manage their schedule**.
+Built as a portfolio project focused on UI/UX, component design, and realistic booking flows.
+
+## Key features
+
+### Client
+- Browse barbers and specialties (card grid)
+- Barber details with portfolio access and booking entry point
+- Appointment selector with availability (partially/fully booked days)
+- Profile with upcoming/past appointments and cancellation
+
+### Barber
+- Dashboard with “next appointment” and status chips (Booked / Completed / No-show / Canceled)
+- View appointment details + update status
+- All appointments grouped by date with status counters
+- Profile management (prices, profile details, portfolio)
+
+## Tech stack
+- JavaScript
+- React Native (Expo)
+- NativeWind (Tailwind-style utility classes)
+- React Navigation
+- React Native Reanimated
+- Local mock data + dev seeding for demo appointments
+
+## Media
+Screenshots: `./screenshots`  
+Screen recordings (MP4): `./screenRecordings`
+
+## Demo data & assets disclaimer
+All names, phone numbers, and appointment data in this project are **fictional** and used for demo/testing purposes only.  
+All profile and portfolio images shown in the app and in the screenshots are **AI-generated** and do not depict real people.
